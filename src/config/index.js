@@ -33,6 +33,12 @@ const config = {
     maxFileSize: 5 * 1024 * 1024, // 5 MB
   },
 
+  backup: {
+    dir: path.resolve(ROOT, 'backups'),
+    // If set, backups are encrypted at rest with AES-256-GCM using this passphrase.
+    encryptionKey: process.env.BACKUP_ENCRYPTION_KEY || '',
+  },
+
   // Bootstrap administrator — created once by the seed script.
   admin: {
     name: process.env.ADMIN_NAME || 'System Administrator',

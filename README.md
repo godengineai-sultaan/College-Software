@@ -52,7 +52,7 @@ is editable **from the UI**, no code changes required.
 
 ## Quick start
 
-Requirements: **Node.js 18+** (Node 22+ recommended). Nothing else.
+Requirements: **Node.js 22.5+** (uses Node's built-in `node:sqlite`). Nothing else — no database server, no build step, no native compilation.
 
 ```bash
 # 1. Install dependencies
@@ -80,6 +80,11 @@ Useful scripts:
 | `npm run migrate` | Apply the database schema only |
 | `npm run seed` | Insert demo data (skips if data exists) |
 | `npm run reset` | **Wipe** the database and rebuild it (destructive) |
+| `npm test` | Run the automated test suite (unit + integration) |
+| `npm run check` | Static check: syntax, template compile, route wiring |
+| `npm run backup:create` | Create a database backup (for cron) |
+| `npm run restore -- <file>` | Restore the database from a backup |
+| `npm run loadtest` | Concurrency/throughput load test |
 
 ---
 
@@ -200,13 +205,37 @@ Task Scheduler). Restoring is as simple as replacing the database file.
 
 - Passwords hashed with **bcrypt**.
 - **Session** authentication with a persistent SQLite session store; login
-  throttling (lockout after repeated failures).
-- **CSRF protection** on every state-changing form.
+  throttling + per-account lockout after repeated failures.
+- **CSRF protection** on every state-changing form (including multipart uploads).
+- **Rate limiting** — global per-IP plus a stricter limit on login.
+- **Security headers** on every response: a strict **Content-Security-Policy**,
+  `X-Frame-Options`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`,
+  HSTS (in production), and `X-Powered-By` removed.
 - **Role-based access control** with branch scoping on every route.
 - **Audit trail** of significant actions (user, IP, timestamp, before/after values).
-- SQL uses **parameterised queries** throughout (no string concatenation).
-- Set a strong `SESSION_SECRET` and run behind HTTPS in production
-  (set `TRUST_PROXY=1` when behind a reverse proxy so secure cookies work).
+- **Encrypted backups** (AES-256-GCM) when `BACKUP_ENCRYPTION_KEY` is set.
+- SQL uses **parameterised queries** throughout (no string concatenation);
+  EJS auto-escapes output (XSS-safe).
+- Production **refuses to start** with default secrets. Set a strong
+  `SESSION_SECRET`, change `ADMIN_PASSWORD`, and run behind HTTPS
+  (`TRUST_PROXY=1` when behind a reverse proxy).
+
+## Testing & CI
+
+- `npm test` runs a **unit + integration** suite (Node's built-in test runner,
+  no extra dependencies): fee-engine math, allocation, ID generation,
+  permissions, CSV/Excel, plus HTTP tests for auth, RBAC, CSRF, health and a
+  full collection→receipt flow.
+- `npm run check` statically validates syntax, EJS templates and route wiring.
+- **GitHub Actions** ([`.github/workflows/ci.yml`](.github/workflows/ci.yml))
+  runs `check` + `test` + a fresh-setup health boot on Node 22 and 24.
+- `npm run loadtest` demonstrates the "50+ concurrent users" target.
+
+## Documentation
+
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — Docker, systemd/Nginx, or PM2.
+- [docs/OPERATIONS.md](docs/OPERATIONS.md) — backups, restore, monitoring, upgrades.
+- [docs/ADMIN_GUIDE.md](docs/ADMIN_GUIDE.md) — day-to-day guide for staff (no tech knowledge needed).
 
 ---
 
@@ -223,11 +252,17 @@ rest of the app is unchanged. The schema in
 
 ## Deployment
 
-1. Copy the project to your server, run `npm install --omit=dev`.
-2. Set `.env` (`NODE_ENV=production`, a strong `SESSION_SECRET`, `TRUST_PROXY=1` if applicable).
-3. `npm run setup` (first time only).
-4. Run `npm start` under a process manager (pm2, systemd) and put **Nginx** in
-   front for HTTPS. That mirrors the brain-chart infrastructure (Nginx + Node.js).
+Full instructions in **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**. Three supported
+options, all mirroring the brain-chart infrastructure (Nginx + Node.js):
+
+- **Docker Compose** — `docker compose up -d` (includes a healthcheck and an
+  optional Nginx TLS proxy). See [`Dockerfile`](Dockerfile), [`docker-compose.yml`](docker-compose.yml).
+- **systemd + Nginx** — [`deploy/wschools.service`](deploy/wschools.service) +
+  [`deploy/nginx.conf.sample`](deploy/nginx.conf.sample).
+- **PM2** — [`ecosystem.config.js`](ecosystem.config.js).
+
+In all cases: set a strong `SESSION_SECRET`, change `ADMIN_PASSWORD`, run
+`npm run setup` once, and serve over HTTPS with `TRUST_PROXY=1`.
 
 ---
 

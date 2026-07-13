@@ -12,6 +12,23 @@
 const fs = require('fs');
 const config = require('./src/config');
 
+// Production readiness checks — fail loudly on insecure defaults.
+if (config.env === 'production') {
+  const problems = [];
+  if (!process.env.SESSION_SECRET || /change-this|dev-secret/i.test(config.session.secret)) {
+    problems.push('SESSION_SECRET is missing or still the default — set a long random value.');
+  }
+  if (/Admin@123/.test(config.admin.password)) {
+    problems.push('ADMIN_PASSWORD is still the default — change it before going live.');
+  }
+  if (problems.length) {
+    console.error('\n✗ Refusing to start in production with insecure configuration:');
+    for (const p of problems) console.error('   • ' + p);
+    console.error('  Fix these in your .env file, then restart.\n');
+    process.exit(1);
+  }
+}
+
 // Friendly guard: make sure the database has been set up.
 if (!fs.existsSync(config.db.file)) {
   console.log('\n⚠  Database not found. Running first-time setup...\n');

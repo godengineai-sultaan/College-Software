@@ -11,6 +11,8 @@ const config = require('./config');
 const SqliteStore = require('./middleware/sessionStore')(session);
 const flash = require('./middleware/flash');
 const csrf = require('./middleware/csrf');
+const securityHeaders = require('./middleware/security');
+const rateLimit = require('./middleware/rateLimit');
 const { loadUser } = require('./middleware/auth');
 const Setting = require('./models/setting');
 const { icon } = require('./utils/icons');
@@ -18,6 +20,8 @@ const constants = require('./config/constants');
 const { titleCase, money, formatDate, formatDateTime, numberToWords, today } = require('./utils/helpers');
 
 const app = express();
+app.disable('x-powered-by');
+if (process.env.TRUST_PROXY === '1') app.set('trust proxy', 1);
 
 // ---- View engine -----------------------------------------------------------
 app.set('views', path.join(__dirname, 'views'));
@@ -25,12 +29,21 @@ app.set('view engine', 'ejs');
 app.use(expressLayouts);
 app.set('layout', 'layouts/main');
 
+// ---- Security headers (applied to every response, incl. static) ------------
+app.use(securityHeaders);
+
 // ---- Core middleware -------------------------------------------------------
 if (config.env !== 'test') app.use(morgan('dev'));
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
-app.use(methodOverride('_method'));
 app.use(express.static(path.join(config.root, 'public')));
+
+// Global rate limit for dynamic requests (static assets above are exempt).
+if (config.env !== 'test') {
+  app.use(rateLimit({ windowMs: 60_000, max: 600 }));
+}
+
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+app.use(express.json({ limit: '1mb' }));
+app.use(methodOverride('_method'));
 
 // ---- Sessions --------------------------------------------------------------
 app.use(
@@ -48,7 +61,6 @@ app.use(
     },
   })
 );
-if (process.env.TRUST_PROXY === '1') app.set('trust proxy', 1);
 
 app.use(flash);
 

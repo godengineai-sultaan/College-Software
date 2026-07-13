@@ -8,6 +8,9 @@
 const { requireAuth } = require('../middleware/auth');
 
 module.exports = function (app) {
+  // Public: health/readiness (no auth, no session needed)
+  app.use('/', require('./health'));
+
   // Public
   app.use('/', require('./auth'));
   app.get('/', (req, res) => res.redirect(req.user ? '/dashboard' : '/login'));
