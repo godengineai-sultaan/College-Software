@@ -1,0 +1,21 @@
+<%
+  var code = (typeof errorCode !== 'undefined') ? errorCode : '';
+  var head = (typeof heading !== 'undefined' && heading) ? heading : 'Something went wrong';
+  var detail = (typeof message !== 'undefined' && message) ? message : '';
+  var showErr = (typeof error !== 'undefined') ? error : null;
+%>
+<div class="auth-wrap">
+  <div class="auth-card" style="max-width:480px; text-align:center;">
+    <div class="body" style="padding:40px 32px;">
+      <div style="font-size:56px; font-weight:800; color:var(--brand); line-height:1;"><%= code %></div>
+      <h1 style="margin-top:14px;"><%= head %></h1>
+      <% if (detail) { %><p class="muted"><%= detail %></p><% } %>
+      <% if (showErr) { %>
+        <pre style="text-align:left; background:#0f172a; color:#e2e8f0; padding:14px; border-radius:10px; overflow:auto; font-size:12px; margin-top:16px;"><%= showErr.stack || showErr.message %></pre>
+      <% } %>
+      <div style="margin-top:22px;">
+        <a href="/dashboard" class="btn"><%- icon('home') %> Go to Dashboard</a>
+      </div>
+    </div>
+  </div>
+</div>

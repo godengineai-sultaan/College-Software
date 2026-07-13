@@ -1,0 +1,125 @@
+<div class="page-head">
+  <div>
+    <div class="breadcrumb"><a href="/students">Students</a> / <%= student.unique_id %></div>
+    <div class="profile-head">
+      <div class="profile-photo"><%= (student.name || '?').charAt(0).toUpperCase() %></div>
+      <div>
+        <h1 style="margin:0;"><%= student.name %></h1>
+        <div class="tag-list" style="margin-top:6px;">
+          <span class="badge indigo"><%= student.unique_id %></span>
+          <span class="badge blue">Branch <%= student.branch_code %></span>
+          <span class="badge gray"><%= student.course_disp || student.course_name || '—' %> · Sem <%= student.semester %></span>
+          <span class="badge <%= student.status==='active'?'green':'gray' %>"><%= h.titleCase(student.status) %></span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="btn-group">
+    <% if (can('collection')) { %><a href="/collection?student=<%= student.id %>" class="btn"><%- icon('money') %> Collect Fee</a><% } %>
+    <% if (canManage('students')) { %><a href="/students/<%= student.id %>/edit" class="btn secondary"><%- icon('edit') %> Edit</a><% } %>
+  </div>
+</div>
+
+<!-- Fee summary tiles -->
+<div class="stats">
+  <div class="stat"><div class="stat__icon i-indigo"><%- icon('fees',22) %></div><div><div class="stat__val"><%= h.money(summary.net, currency) %></div><div class="stat__label">Total Payable</div></div></div>
+  <div class="stat"><div class="stat__icon i-green"><%- icon('check',22) %></div><div><div class="stat__val"><%= h.money(summary.paid, currency) %></div><div class="stat__label">Paid</div></div></div>
+  <div class="stat"><div class="stat__icon i-red"><%- icon('money',22) %></div><div><div class="stat__val"><%= h.money(summary.due, currency) %></div><div class="stat__label">Balance Due</div></div></div>
+  <div class="stat"><div class="stat__icon i-amber"><%- icon('clock',22) %></div><div><div class="stat__val"><%= h.money(summary.late_fee, currency) %></div><div class="stat__label">Late Fee</div></div></div>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card__head"><h3>Fee Ledger</h3>
+      <% if (canManage('students')) { %>
+        <form action="/students/<%= student.id %>/assign-fees" method="POST" style="margin:0;"><%- csrfField() %><button class="btn sm secondary" title="Assign fee structure for current semester"><%- icon('plus',14) %> Assign Fees</button></form>
+      <% } %>
+    </div>
+    <div class="card__body tight">
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th>Head</th><th class="text-right">Amount</th><th class="text-right">Disc.</th><th class="text-right">Late</th><th class="text-right">Paid</th><th class="text-right">Due</th><th>Status</th></tr></thead>
+          <tbody>
+            <% if (!summary.lines.length) { %><tr><td colspan="7" class="text-center muted" style="padding:22px;">No fee lines. Use “Assign Fees”.</td></tr><% } %>
+            <% summary.lines.forEach(function(l){ %>
+              <tr>
+                <td><%= l.fee_head %><% if (l.due_date) { %><br><span class="muted small">Due <%= h.formatDate(l.due_date) %></span><% } %></td>
+                <td class="text-right"><%= h.money(l.amount, currency) %></td>
+                <td class="text-right"><%= l.discount ? h.money(l.discount, currency) : '—' %></td>
+                <td class="text-right"><%= l.late_fee ? h.money(l.late_fee, currency) : '—' %></td>
+                <td class="text-right"><%= h.money(l.paid, currency) %></td>
+                <td class="text-right"><strong><%= h.money(l.balance, currency) %></strong></td>
+                <td><% var c=l.status==='paid'?'green':(l.status==='partial'?'amber':(l.status==='waived'?'gray':'red')); %><span class="badge <%= c %>"><%= h.titleCase(l.status) %></span></td>
+              </tr>
+            <% }); %>
+          </tbody>
+          <% if (summary.lines.length) { %>
+          <tfoot><tr style="font-weight:700; background:#f8fafc;">
+            <td>Total</td>
+            <td class="text-right"><%= h.money(summary.charged, currency) %></td>
+            <td class="text-right"><%= h.money(summary.discount, currency) %></td>
+            <td class="text-right"><%= h.money(summary.late_fee, currency) %></td>
+            <td class="text-right"><%= h.money(summary.paid, currency) %></td>
+            <td class="text-right"><%= h.money(summary.due, currency) %></td>
+            <td></td>
+          </tr></tfoot>
+          <% } %>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="card">
+      <div class="card__head"><h3>Details</h3></div>
+      <div class="card__body">
+        <div class="detail-grid">
+          <div class="row"><span class="k">Roll No</span><span class="v"><%= student.roll_no || '—' %></span></div>
+          <div class="row"><span class="k">Gender</span><span class="v"><%= student.gender || '—' %></span></div>
+          <div class="row"><span class="k">Date of Birth</span><span class="v"><%= h.formatDate(student.dob) %></span></div>
+          <div class="row"><span class="k">Category</span><span class="v"><%= student.category || '—' %></span></div>
+          <div class="row"><span class="k">Phone</span><span class="v"><%= student.phone || '—' %></span></div>
+          <div class="row"><span class="k">Email</span><span class="v"><%= student.email || '—' %></span></div>
+          <div class="row"><span class="k">Guardian</span><span class="v"><%= student.guardian_name || '—' %></span></div>
+          <div class="row"><span class="k">Guardian Phone</span><span class="v"><%= student.guardian_phone || '—' %></span></div>
+          <div class="row"><span class="k">City / State</span><span class="v"><%= [student.city, student.state].filter(Boolean).join(', ') || '—' %></span></div>
+          <div class="row"><span class="k">Admission</span><span class="v"><%= h.formatDate(student.admission_date) %></span></div>
+        </div>
+      </div>
+    </div>
+    <% if (canManage('students')) { %>
+    <div class="card">
+      <div class="card__body">
+        <form action="/students/<%= student.id %>/delete" method="POST" data-confirm="Move <%= student.name %> to trash? You can restore later." style="margin:0;">
+          <%- csrfField() %>
+          <button class="btn danger sm"><%- icon('trash',14) %> Move to Trash</button>
+        </form>
+      </div>
+    </div>
+    <% } %>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card__head"><h3>Payment History</h3></div>
+  <div class="card__body tight">
+    <div class="table-wrap">
+      <table class="data">
+        <thead><tr><th>Receipt</th><th>Date</th><th class="text-right">Amount</th><th>Mode</th><th>Branch</th><th></th></tr></thead>
+        <tbody>
+          <% if (!receipts.length) { %><tr><td colspan="6" class="text-center muted" style="padding:22px;">No payments yet.</td></tr><% } %>
+          <% receipts.forEach(function(r){ %>
+            <tr>
+              <td><a href="/receipts/<%= r.id %>"><%= r.receipt_no %></a> <% if (r.cross_branch) { %><span class="badge blue">X-Branch</span><% } %></td>
+              <td><%= h.formatDate(r.paid_on) %></td>
+              <td class="text-right"><%= h.money(r.amount, currency) %></td>
+              <td><span class="badge gray"><%= labelFor(constants.PAYMENT_MODES, r.payment_mode) %></span></td>
+              <td><span class="badge indigo"><%= r.collect_branch %></span></td>
+              <td><a class="icon-btn" href="/receipts/<%= r.id %>" title="View receipt"><%- icon('print',15) %></a></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

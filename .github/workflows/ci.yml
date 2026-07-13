@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: ['main', 'claude/**']
+  pull_request:
+    branches: ['main']
+
+jobs:
+  test:
+    name: check & test (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['22', '24']
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Static check (syntax, views, route wiring)
+        run: npm run check
+
+      - name: Run tests
+        run: npm test
+
+      - name: Verify fresh setup + health boot
+        run: |
+          npm run setup
+          node -e "const s=require('./server.js'); setTimeout(()=>{require('http').get('http://localhost:'+(process.env.PORT||3000)+'/health',r=>{let d='';r.on('data',c=>d+=c);r.on('end',()=>{console.log('health:',d);process.exit(r.statusCode===200?0:1)})}).on('error',e=>{console.error(e);process.exit(1)})},1500)"
+        env:
+          PORT: 3000
+          NODE_ENV: development

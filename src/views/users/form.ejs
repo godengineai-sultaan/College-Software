@@ -1,0 +1,105 @@
+<% if (typeof isPassword !== 'undefined' && isPassword) { %>
+  <%# ---- Reset-password mode (small standalone form) ---- %>
+  <div class="page-head">
+    <div>
+      <div class="breadcrumb"><a href="/users">Users</a> / Reset password</div>
+      <h1>Reset Password</h1>
+      <div class="sub"><%= account.name %> · @<%= account.username %></div>
+    </div>
+    <a href="/users" class="btn secondary"><%- icon('back') %> Cancel</a>
+  </div>
+
+  <div class="card" style="max-width:520px;">
+    <div class="card__body">
+      <form action="/users/<%= account.id %>/password" method="POST">
+        <%- csrfField() %>
+        <div class="field" style="margin-bottom:14px;"><label>New password <span class="req">*</span></label><input type="password" name="new_password" minlength="6" required><span class="hint">At least 6 characters.</span></div>
+        <div class="field" style="margin-bottom:14px;"><label>Confirm password <span class="req">*</span></label><input type="password" name="confirm_password" minlength="6" required></div>
+        <label style="display:flex;align-items:center;gap:8px;font-weight:600;margin-bottom:16px;">
+          <input type="checkbox" name="must_change_password" value="1" style="width:auto;">
+          Require the user to set a new password at next login
+        </label>
+        <button class="btn"><%- icon('key') %> Set new password</button>
+      </form>
+    </div>
+  </div>
+
+<% } else { %>
+  <%# ---- Create / edit user ---- %>
+  <div class="page-head">
+    <div>
+      <div class="breadcrumb"><a href="/users">Users</a> / <%= isEdit ? 'Edit' : 'Add' %></div>
+      <h1><%= isEdit ? 'Edit User' : 'Add User' %></h1>
+      <% if (isEdit) { %><div class="sub">@<%= account.username %></div><% } %>
+    </div>
+    <a href="/users" class="btn secondary"><%- icon('back') %> Cancel</a>
+  </div>
+
+  <form action="<%= isEdit ? '/users/'+account.id : '/users' %>" method="POST">
+    <%- csrfField() %>
+    <div class="card">
+      <div class="card__head"><h3>Account</h3></div>
+      <div class="card__body">
+        <div class="form-grid">
+          <div class="field"><label>Username <span class="req">*</span></label><input name="username" value="<%= account.username || '' %>" autocomplete="off" required><span class="hint">Used to sign in. Must be unique.</span></div>
+          <div class="field"><label>Full Name <span class="req">*</span></label><input name="name" value="<%= account.name || '' %>" required></div>
+          <div class="field"><label>Email</label><input type="email" name="email" value="<%= account.email || '' %>"></div>
+          <div class="field"><label>Phone</label><input name="phone" value="<%= account.phone || '' %>"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card__head"><h3>Role &amp; Access</h3></div>
+      <div class="card__body">
+        <div class="form-grid">
+          <div class="field"><label>Role <span class="req">*</span></label>
+            <select name="role" required>
+              <% roles.forEach(function(r){ %><option value="<%= r.value %>" <%= (account.role||'viewer')===r.value?'selected':'' %>><%= r.label %></option><% }); %>
+            </select>
+          </div>
+          <div class="field"><label>Branch</label>
+            <select name="branch_id">
+              <option value="">All Branches</option>
+              <% branches.forEach(function(b){ %><option value="<%= b.id %>" <%= String(account.branch_id)==String(b.id)?'selected':'' %>>Branch <%= b.branch_code %> — <%= b.name %></option><% }); %>
+            </select>
+            <span class="hint">Required for Branch Admin, Accountant &amp; Receptionist. Leave as “All Branches” for Super Admin / Viewer.</span>
+          </div>
+          <div class="field"><label>Status</label>
+            <select name="status">
+              <option value="active" <%= (account.status||'active')==='active'?'selected':'' %>>Active</option>
+              <option value="inactive" <%= account.status==='inactive'?'selected':'' %>>Inactive</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <% if (!isEdit) { %>
+      <div class="card">
+        <div class="card__head"><h3>Password</h3></div>
+        <div class="card__body">
+          <div class="form-grid">
+            <div class="field"><label>Password <span class="req">*</span></label><input type="password" name="password" minlength="6" autocomplete="new-password" required><span class="hint">At least 6 characters.</span></div>
+            <div class="field" style="justify-content:flex-end;">
+              <label style="display:flex;align-items:center;gap:8px;font-weight:600;">
+                <input type="checkbox" name="must_change_password" value="1" style="width:auto;">
+                Force a password change at first login
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% } %>
+
+    <div class="card">
+      <div class="card__body">
+        <div class="form-actions" style="margin-top:0;padding-top:0;border-top:none;">
+          <button class="btn"><%- icon('save') %> <%= isEdit ? 'Save Changes' : 'Create User' %></button>
+          <a href="/users" class="btn ghost">Cancel</a>
+          <% if (isEdit) { %><a href="/users/<%= account.id %>/password" class="btn secondary"><%- icon('key') %> Reset Password</a><% } %>
+        </div>
+      </div>
+    </div>
+  </form>
+<% } %>

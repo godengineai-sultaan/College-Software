@@ -1,0 +1,6 @@
+<% const kinds = { success: 'success', error: 'error', info: 'info', warning: 'warning' }; %>
+<% Object.keys(kinds).forEach(function(k){ (flash[k] || []).forEach(function(msg){ %>
+  <div class="alert <%= kinds[k] %>" data-auto>
+    <span><%= msg %></span>
+  </div>
+<% }); }); %>

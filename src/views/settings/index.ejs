@@ -1,0 +1,126 @@
+<% var on = function(key){ return config[key] === '1' || config[key] === 1 || config[key] === true; }; %>
+<div class="page-head">
+  <div>
+    <h1>Settings</h1>
+    <div class="sub">Institution configuration, fee rules, notifications &amp; backups</div>
+  </div>
+</div>
+
+<form action="/settings" method="POST">
+  <%- csrfField() %>
+
+  <%# ---- Institution / Branding ---- %>
+  <div class="card">
+    <div class="card__head"><h3><%- icon('building', 16) %> Institution &amp; Branding</h3></div>
+    <div class="card__body">
+      <div class="form-grid">
+        <div class="field"><label>Institution Name</label><input name="institution_name" value="<%= config.institution_name || '' %>"></div>
+        <div class="field"><label>Short Name</label><input name="institution_short" value="<%= config.institution_short || '' %>"></div>
+        <div class="field full"><label>Address</label><input name="institution_address" value="<%= config.institution_address || '' %>"></div>
+        <div class="field"><label>Phone</label><input name="institution_phone" value="<%= config.institution_phone || '' %>"></div>
+        <div class="field"><label>Email</label><input type="email" name="institution_email" value="<%= config.institution_email || '' %>"></div>
+        <div class="field"><label>Website</label><input name="institution_website" value="<%= config.institution_website || '' %>"></div>
+        <div class="field"><label>Currency Symbol</label><input name="currency_symbol" value="<%= config.currency_symbol || '' %>" maxlength="4"></div>
+        <div class="field"><label>Academic Year</label><input name="academic_year" value="<%= config.academic_year || '' %>" placeholder="2025-2026"></div>
+      </div>
+    </div>
+  </div>
+
+  <%# ---- Auto-ID prefixes ---- %>
+  <div class="card">
+    <div class="card__head"><h3><%- icon('settings', 16) %> Auto-ID Prefixes</h3></div>
+    <div class="card__body">
+      <div class="form-grid">
+        <div class="field"><label>Student ID Prefix</label><input name="student_id_prefix" value="<%= config.student_id_prefix || '' %>"><span class="hint">Format: PREFIX-&lt;branch&gt;-&lt;yy&gt;-&lt;seq&gt;</span></div>
+        <div class="field"><label>Receipt No. Prefix</label><input name="receipt_no_prefix" value="<%= config.receipt_no_prefix || '' %>"></div>
+        <div class="field"><label>Voucher No. Prefix</label><input name="voucher_no_prefix" value="<%= config.voucher_no_prefix || '' %>"></div>
+        <div class="field"><label>Exam Form No. Prefix</label><input name="examform_no_prefix" value="<%= config.examform_no_prefix || '' %>"></div>
+      </div>
+    </div>
+  </div>
+
+  <%# ---- Fee rules ---- %>
+  <div class="card">
+    <div class="card__head"><h3><%- icon('fees', 16) %> Fee Rules</h3></div>
+    <div class="card__body">
+      <label style="display:flex;align-items:center;gap:8px;font-weight:600;margin-bottom:16px;">
+        <input type="checkbox" name="late_fee_enabled" value="1" style="width:auto;" <%= on('late_fee_enabled') ? 'checked' : '' %>>
+        Charge late fees on overdue dues
+      </label>
+      <div class="form-grid">
+        <div class="field"><label>Late Fee per Day (<%= config.currency_symbol || '' %>)</label><input type="number" name="late_fee_per_day" value="<%= config.late_fee_per_day || '' %>" min="0" step="1"></div>
+        <div class="field"><label>Late Fee Cap (<%= config.currency_symbol || '' %>)</label><input type="number" name="late_fee_max" value="<%= config.late_fee_max || '' %>" min="0" step="1"></div>
+      </div>
+      <hr class="sep">
+      <label style="display:flex;align-items:center;gap:8px;font-weight:600;margin-bottom:16px;">
+        <input type="checkbox" name="discount_needs_approval" value="1" style="width:auto;" <%= on('discount_needs_approval') ? 'checked' : '' %>>
+        Discounts above the auto-approve threshold need approval
+      </label>
+      <div class="form-grid">
+        <div class="field"><label>Auto-approve Discounts up to (<%= config.currency_symbol || '' %>)</label><input type="number" name="discount_auto_approve_upto" value="<%= config.discount_auto_approve_upto || '' %>" min="0" step="1"></div>
+      </div>
+    </div>
+  </div>
+
+  <%# ---- Notifications ---- %>
+  <div class="card">
+    <div class="card__head"><h3><%- icon('bell', 16) %> Notifications</h3></div>
+    <div class="card__body">
+      <fieldset>
+        <legend>SMS</legend>
+        <label style="display:flex;align-items:center;gap:8px;font-weight:600;margin-bottom:16px;">
+          <input type="checkbox" name="sms_enabled" value="1" style="width:auto;" <%= on('sms_enabled') ? 'checked' : '' %>>
+          Enable SMS notifications
+        </label>
+        <div class="form-grid">
+          <div class="field"><label>Provider</label>
+            <select name="sms_provider">
+              <option value="fast2sms" <%= config.sms_provider==='fast2sms'?'selected':'' %>>Fast2SMS</option>
+              <option value="msg91" <%= config.sms_provider==='msg91'?'selected':'' %>>MSG91</option>
+            </select>
+          </div>
+          <div class="field"><label>Sender ID</label><input name="sms_sender_id" value="<%= config.sms_sender_id || '' %>" maxlength="12"></div>
+          <div class="field full"><label>API Key</label><input type="password" name="sms_api_key" value="" autocomplete="off" placeholder="<%= config.sms_api_key ? '•••••••• (unchanged)' : 'Not set' %>"><span class="hint">Leave blank to keep the current key.</span></div>
+        </div>
+      </fieldset>
+      <fieldset style="margin-bottom:0;">
+        <legend>Email</legend>
+        <label style="display:flex;align-items:center;gap:8px;font-weight:600;margin-bottom:16px;">
+          <input type="checkbox" name="email_enabled" value="1" style="width:auto;" <%= on('email_enabled') ? 'checked' : '' %>>
+          Enable email notifications
+        </label>
+        <div class="form-grid">
+          <div class="field"><label>Provider</label>
+            <select name="email_provider">
+              <option value="smtp" <%= config.email_provider==='smtp'?'selected':'' %>>SMTP</option>
+              <option value="sendgrid" <%= config.email_provider==='sendgrid'?'selected':'' %>>SendGrid</option>
+            </select>
+          </div>
+          <div class="field"><label>Reminder Days Before Due</label><input type="number" name="reminder_days_before" value="<%= config.reminder_days_before || '' %>" min="0" step="1"></div>
+          <div class="field"><label>SMTP Host</label><input name="smtp_host" value="<%= config.smtp_host || '' %>"></div>
+          <div class="field"><label>SMTP Port</label><input type="number" name="smtp_port" value="<%= config.smtp_port || '' %>"></div>
+          <div class="field"><label>SMTP User</label><input name="smtp_user" value="<%= config.smtp_user || '' %>" autocomplete="off"></div>
+          <div class="field"><label>SMTP Password</label><input type="password" name="smtp_pass" value="" autocomplete="new-password" placeholder="<%= config.smtp_pass ? '•••••••• (unchanged)' : 'Not set' %>"><span class="hint">Leave blank to keep the current password.</span></div>
+        </div>
+      </fieldset>
+    </div>
+  </div>
+
+  <%# ---- Backup ---- %>
+  <div class="card">
+    <div class="card__head"><h3><%- icon('save', 16) %> Backup</h3></div>
+    <div class="card__body">
+      <div class="form-grid">
+        <div class="field"><label>Backup Retention (days)</label><input type="number" name="backup_retention_days" value="<%= config.backup_retention_days || '' %>" min="1" step="1"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card__body">
+      <div class="form-actions" style="margin-top:0;padding-top:0;border-top:none;">
+        <button class="btn"><%- icon('save') %> Save Settings</button>
+      </div>
+    </div>
+  </div>
+</form>

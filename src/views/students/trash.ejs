@@ -1,0 +1,29 @@
+<div class="page-head">
+  <div><div class="breadcrumb"><a href="/students">Students</a> / Trash</div><h1>Deleted Students</h1><div class="sub">Soft-deleted records — restore anytime.</div></div>
+  <a href="/students" class="btn secondary"><%- icon('back') %> Back</a>
+</div>
+
+<div class="card">
+  <div class="card__body tight">
+    <div class="table-wrap">
+      <table class="data">
+        <thead><tr><th>Student ID</th><th>Name</th><th>Course</th><th>Branch</th><th>Deleted</th><th></th></tr></thead>
+        <tbody>
+          <% if (!students.length) { %><tr><td colspan="6"><div class="empty"><div class="big">🗑️</div><h3>Trash is empty</h3></div></td></tr><% } %>
+          <% students.forEach(function(s){ %>
+            <tr>
+              <td><strong><%= s.unique_id %></strong></td>
+              <td><%= s.name %></td>
+              <td><%= s.course_disp || s.course_name || '—' %></td>
+              <td><span class="badge indigo"><%= s.branch_code %></span></td>
+              <td class="muted"><%= h.formatDateTime(s.deleted_at) %></td>
+              <td>
+                <form action="/students/<%= s.id %>/restore" method="POST" style="margin:0;"><%- csrfField() %><button class="btn sm success"><%- icon('check',14) %> Restore</button></form>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

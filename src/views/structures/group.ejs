@@ -1,0 +1,55 @@
+<% var addUrl = '/structures/new?course=' + (course ? course.id : '') + '&semester=' + semester + (academicYear ? '&year=' + encodeURIComponent(academicYear) : ''); %>
+<div class="page-head">
+  <div>
+    <div class="breadcrumb"><a href="/structures">Fee Structures</a> / <%= course ? course.name : 'Group' %></div>
+    <h1><%= course ? course.name : 'Fee Structure' %> · Sem <%= semester %></h1>
+    <div class="sub"><%= academicYear || 'All years' %> · <%= rows.length %> fee head<%= rows.length === 1 ? '' : 's' %></div>
+  </div>
+  <div class="btn-group">
+    <a href="/structures" class="btn secondary"><%- icon('back') %> Back</a>
+    <% if (canManage('structures')) { %>
+      <a href="<%= addUrl %>" class="btn"><%- icon('plus') %> Add Head</a>
+    <% } %>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card__body tight">
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr><th>Fee Head</th><th class="text-right">Amount</th><th>Due Date</th><th class="text-right">Late Fee / day</th><th></th></tr>
+        </thead>
+        <tbody>
+          <% if (!rows.length) { %>
+            <tr><td colspan="5"><div class="empty"><div class="big">📄</div><h3>No fee heads here yet</h3><p>Add a head to build this fee structure.</p></div></td></tr>
+          <% } %>
+          <% rows.forEach(function(r){ %>
+            <tr>
+              <td><strong><%= r.fee_head %></strong></td>
+              <td class="text-right"><%= h.money(r.amount, currency) %></td>
+              <td><%= h.formatDate(r.due_date) %></td>
+              <td class="text-right"><%= r.late_fee_per_day ? h.money(r.late_fee_per_day, currency) : '—' %></td>
+              <td class="nowrap">
+                <% if (canManage('structures')) { %>
+                  <a class="icon-btn" href="/structures/<%= r.id %>/edit" title="Edit"><%- icon('edit', 15) %></a>
+                  <form action="/structures/<%= r.id %>/delete" method="POST" data-confirm="Delete fee head “<%= r.fee_head %>”?" style="display:inline;">
+                    <%- csrfField() %>
+                    <button class="icon-btn danger" title="Delete"><%- icon('trash', 15) %></button>
+                  </form>
+                <% } %>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+        <% if (rows.length) { %>
+        <tfoot><tr style="font-weight:700; background:#f8fafc;">
+          <td>Total</td>
+          <td class="text-right"><%= h.money(total, currency) %></td>
+          <td colspan="3"></td>
+        </tr></tfoot>
+        <% } %>
+      </table>
+    </div>
+  </div>
+</div>

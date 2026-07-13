@@ -1,0 +1,64 @@
+<div class="page-head">
+  <div>
+    <h1>Branches</h1>
+    <div class="sub"><%= counts.total %> branch<%= counts.total === 1 ? '' : 'es' %> · <%= counts.active %> active</div>
+  </div>
+  <div class="btn-group">
+    <% if (canManage('branches')) { %>
+      <a href="/branches/new" class="btn"><%- icon('plus') %> Add Branch</a>
+    <% } %>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat">
+    <div class="stat__icon i-indigo"><%- icon('building', 22) %></div>
+    <div><div class="stat__val"><%= counts.total %></div><div class="stat__label">Total Branches</div></div>
+  </div>
+  <div class="stat">
+    <div class="stat__icon i-green"><%- icon('check', 22) %></div>
+    <div><div class="stat__val"><%= counts.active %></div><div class="stat__label">Active</div></div>
+  </div>
+  <div class="stat">
+    <div class="stat__icon i-amber"><%- icon('clock', 22) %></div>
+    <div><div class="stat__val"><%= counts.inactive %></div><div class="stat__label">Inactive</div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card__body tight">
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr><th>Code</th><th>Name</th><th>Address</th><th>Phone</th><th>Email</th><th>Students</th><th>Users</th><th>Status</th><th></th></tr>
+        </thead>
+        <tbody>
+          <% if (!branches.length) { %>
+            <tr><td colspan="9"><div class="empty"><div class="big">🏢</div><h3>No branches yet</h3><p>Add your first branch to get started.</p></div></td></tr>
+          <% } %>
+          <% branches.forEach(function(b){ %>
+            <tr>
+              <td><span class="badge indigo"><%= b.branch_code %></span></td>
+              <td><strong><%= b.name %></strong></td>
+              <td class="wrap muted"><%= b.address || '—' %></td>
+              <td class="muted"><%= b.phone || '—' %></td>
+              <td class="muted"><%= b.email || '—' %></td>
+              <td><%= (b.student_count || 0).toLocaleString('en-IN') %></td>
+              <td><%= b.user_count || 0 %></td>
+              <td><span class="badge <%= b.is_active ? 'green' : 'gray' %>"><%= b.is_active ? 'Active' : 'Inactive' %></span></td>
+              <td class="nowrap">
+                <% if (canManage('branches')) { %>
+                  <a class="icon-btn" href="/branches/<%= b.id %>/edit" title="Edit"><%- icon('edit', 15) %></a>
+                  <form action="/branches/<%= b.id %>/delete" method="POST" style="display:inline;" data-confirm="Deleting branch <%= b.branch_code %> also removes its students, users, fees and receipts. This cannot be undone. Continue?">
+                    <%- csrfField() %>
+                    <button class="icon-btn danger" title="Delete"><%- icon('trash', 15) %></button>
+                  </form>
+                <% } %>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

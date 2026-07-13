@@ -1,0 +1,55 @@
+<div class="page-head">
+  <div>
+    <div class="breadcrumb"><a href="/expenses">Expenses</a> / <%= isEdit ? 'Edit' : 'Add' %></div>
+    <h1><%= isEdit ? 'Edit Expense' : 'Add Expense' %></h1>
+    <% if (isEdit) { %><div class="sub"><%= expense.voucher_no %></div><% } %>
+  </div>
+  <a href="/expenses" class="btn secondary"><%- icon('back') %> Cancel</a>
+</div>
+
+<form action="<%= isEdit ? '/expenses/'+expense.id : '/expenses' %>" method="POST" enctype="multipart/form-data">
+  <%- csrfField() %>
+  <div class="card">
+    <div class="card__head"><h3>Expense Details</h3></div>
+    <div class="card__body">
+      <div class="form-grid">
+        <div class="field"><label>Category <span class="req">*</span></label>
+          <select name="category" required>
+            <option value="">Select category</option>
+            <% categories.forEach(function(c){ %><option value="<%= c %>" <%= expense.category===c?'selected':'' %>><%= c %></option><% }); %>
+          </select>
+        </div>
+        <div class="field"><label>Sub-category</label><input name="sub_category" value="<%= expense.sub_category || '' %>"></div>
+        <div class="field"><label>Amount <span class="req">*</span></label><input type="number" name="amount" min="0" step="0.01" value="<%= expense.amount != null ? expense.amount : '' %>" required></div>
+        <div class="field"><label>Expense Date</label><input type="date" name="expense_date" value="<%= expense.expense_date || h.today() %>"></div>
+        <div class="field"><label>Paid To</label><input name="paid_to" value="<%= expense.paid_to || '' %>"></div>
+        <div class="field"><label>Payment Mode</label>
+          <select name="payment_mode">
+            <% modes.forEach(function(m){ %><option value="<%= m.value %>" <%= (expense.payment_mode||'cash')===m.value?'selected':'' %>><%= m.label %></option><% }); %>
+          </select>
+        </div>
+        <% if (!branchScopeId) { %>
+          <div class="field"><label>Branch <span class="req">*</span></label>
+            <select name="branch_id" <%= isEdit ? 'disabled' : 'required' %>>
+              <option value="">Select branch</option>
+              <% branches.forEach(function(b){ %><option value="<%= b.id %>" <%= String(expense.branch_id)==String(b.id)?'selected':'' %>>Branch <%= b.branch_code %> — <%= b.name %></option><% }); %>
+            </select>
+            <% if (isEdit) { %><span class="hint">Branch cannot be changed after creation.</span><% } %>
+          </div>
+        <% } else { %>
+          <input type="hidden" name="branch_id" value="<%= branchScopeId %>">
+          <div class="field"><label>Branch</label><input value="Branch <%= currentUser.branch_code %>" disabled></div>
+        <% } %>
+        <div class="field full"><label>Bill Attachment</label>
+          <input type="file" name="bill" accept="image/*,application/pdf">
+          <% if (isEdit && expense.bill_attachment) { %><span class="hint">Current: <a href="/uploads/<%= expense.bill_attachment %>" target="_blank" rel="noopener">view bill</a> — choose a file to replace it.</span><% } %>
+        </div>
+        <div class="field full"><label>Notes</label><textarea name="notes" placeholder="Optional description or reference"><%= expense.notes || '' %></textarea></div>
+      </div>
+      <div class="form-actions">
+        <button class="btn"><%- icon('save') %> <%= isEdit ? 'Save Changes' : 'Record Expense' %></button>
+        <a href="/expenses" class="btn ghost">Cancel</a>
+      </div>
+    </div>
+  </div>
+</form>

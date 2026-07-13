@@ -1,0 +1,48 @@
+<div class="page-head">
+  <div>
+    <h1>Fee Structures</h1>
+    <div class="sub"><%= groups.length %> fee-structure group<%= groups.length === 1 ? '' : 's' %></div>
+  </div>
+  <div class="btn-group">
+    <% if (canManage('structures')) { %>
+      <a href="/structures/new" class="btn"><%- icon('plus') %> Add Fee Line</a>
+    <% } %>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card__body" style="padding-bottom:6px;">
+    <form class="toolbar" method="GET" action="/structures">
+      <select name="course" onchange="this.form.submit()">
+        <option value="">All Courses</option>
+        <% courses.forEach(function(c){ %><option value="<%= c.id %>" <%= String(query.course)==String(c.id)?'selected':'' %>><%= c.name %></option><% }); %>
+      </select>
+      <button class="btn secondary sm">Filter</button>
+      <% if (query.course) { %><a href="/structures" class="btn ghost sm">Clear</a><% } %>
+    </form>
+  </div>
+  <div class="card__body tight">
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr><th>Course</th><th>Semester</th><th>Academic Year</th><th class="text-right"># Heads</th><th class="text-right">Total</th><th></th></tr>
+        </thead>
+        <tbody>
+          <% if (!groups.length) { %>
+            <tr><td colspan="6"><div class="empty"><div class="big">📄</div><h3>No fee structures yet</h3><p>Add a fee line to start defining course fees.</p></div></td></tr>
+          <% } %>
+          <% groups.forEach(function(g){ var url = '/structures/group?course=' + g.course_id + '&semester=' + g.semester + (g.academic_year ? '&year=' + encodeURIComponent(g.academic_year) : ''); %>
+            <tr>
+              <td><a href="<%= url %>"><strong><%= g.course_name || '—' %></strong></a><% if (g.course_code) { %> <span class="badge gray"><%= g.course_code %></span><% } %></td>
+              <td>Sem <%= g.semester %></td>
+              <td><%= g.academic_year || '—' %></td>
+              <td class="text-right"><%= g.head_count %></td>
+              <td class="text-right"><strong><%= h.money(g.total, currency) %></strong></td>
+              <td class="nowrap"><a class="icon-btn" href="<%= url %>" title="View fee heads"><%- icon('eye', 15) %></a></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

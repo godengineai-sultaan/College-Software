@@ -1,0 +1,65 @@
+<div class="page-head">
+  <div>
+    <h1>Receipts</h1>
+    <div class="sub"><%= total.toLocaleString('en-IN') %> receipt<%= total===1?'':'s' %> · Total <%= h.money(totalAmount, currency) %></div>
+  </div>
+  <% if (can('collection')) { %><a href="/collection" class="btn"><%- icon('money') %> Collect Fee</a><% } %>
+</div>
+
+<div class="card">
+  <div class="card__body" style="padding-bottom:6px;">
+    <form class="toolbar" method="GET" action="/receipts">
+      <div class="search-box">
+        <span class="ic"><%- icon('search', 16) %></span>
+        <input type="text" name="q" value="<%= query.q || '' %>" placeholder="Receipt no, student name or ID...">
+      </div>
+      <% if (!branchScopeId && branches.length > 1) { %>
+        <select name="branch" onchange="this.form.submit()">
+          <option value="">All Branches</option>
+          <% branches.forEach(function(b){ %><option value="<%= b.id %>" <%= String(query.branch)==String(b.id)?'selected':'' %>>Branch <%= b.branch_code %></option><% }); %>
+        </select>
+      <% } %>
+      <select name="mode" onchange="this.form.submit()">
+        <option value="">Any Mode</option>
+        <% modes.forEach(function(m){ %><option value="<%= m.value %>" <%= query.mode===m.value?'selected':'' %>><%= m.label %></option><% }); %>
+      </select>
+      <select name="cross" onchange="this.form.submit()">
+        <option value="">All</option>
+        <option value="1" <%= query.cross==='1'?'selected':'' %>>Cross-branch</option>
+        <option value="0" <%= query.cross==='0'?'selected':'' %>>Same branch</option>
+      </select>
+      <input type="date" name="from" value="<%= query.from || '' %>" title="From date">
+      <input type="date" name="to" value="<%= query.to || '' %>" title="To date">
+      <button class="btn secondary sm">Filter</button>
+      <% if (query.q || query.mode || query.from || query.to || query.cross || query.branch) { %><a href="/receipts" class="btn ghost sm">Clear</a><% } %>
+    </form>
+  </div>
+  <div class="card__body tight">
+    <div class="table-wrap">
+      <table class="data">
+        <thead><tr><th>Receipt No</th><th>Date</th><th>Student</th><th class="text-right">Amount</th><th>Mode</th><th>Branch</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          <% if (!receipts.length) { %>
+            <tr><td colspan="8"><div class="empty"><div class="big">🧾</div><h3>No receipts found</h3></div></td></tr>
+          <% } %>
+          <% receipts.forEach(function(r){ %>
+            <tr>
+              <td><a href="/receipts/<%= r.id %>"><strong><%= r.receipt_no %></strong></a> <% if (r.cross_branch) { %><span class="badge blue">X-Branch</span><% } %></td>
+              <td class="muted"><%= h.formatDate(r.paid_on) %></td>
+              <td><%= r.student_name %><br><span class="muted small"><%= r.student_uid %></span></td>
+              <td class="text-right"><strong><%= h.money(r.amount, currency) %></strong></td>
+              <td><span class="badge gray"><%= labelFor(constants.PAYMENT_MODES, r.payment_mode) %></span></td>
+              <td><span class="badge indigo"><%= r.collect_branch %></span></td>
+              <td><span class="badge <%= r.status==='cancelled'?'red':'green' %>"><%= h.titleCase(r.status) %></span></td>
+              <td class="nowrap">
+                <a class="icon-btn" href="/receipts/<%= r.id %>" title="View"><%- icon('eye',15) %></a>
+                <a class="icon-btn" href="/receipts/<%= r.id %>/print" target="_blank" title="Print"><%- icon('print',15) %></a>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <%- include('../partials/pagination', { page: page, pages: pages, baseQuery: baseQuery }) %>
+  </div>
+</div>

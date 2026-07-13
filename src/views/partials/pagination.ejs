@@ -1,0 +1,21 @@
+<%
+  // Expects: page, pages, and baseQuery (object of current query params).
+  if (typeof pages === 'undefined' || pages <= 1) { return; }
+  const qs = (p) => {
+    const params = Object.assign({}, baseQuery || {}, { page: p });
+    return '?' + Object.entries(params)
+      .filter(([, v]) => v !== undefined && v !== '' && v !== null)
+      .map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v)).join('&');
+  };
+  const from = Math.max(1, page - 2);
+  const to = Math.min(pages, page + 2);
+%>
+<div class="pagination">
+  <a class="<%= page <= 1 ? 'disabled' : '' %>" href="<%= qs(Math.max(1, page-1)) %>">Prev</a>
+  <% if (from > 1) { %><a href="<%= qs(1) %>">1</a><% if (from > 2) { %><span class="disabled">…</span><% } } %>
+  <% for (let p = from; p <= to; p++) { %>
+    <% if (p === page) { %><span class="current"><%= p %></span><% } else { %><a href="<%= qs(p) %>"><%= p %></a><% } %>
+  <% } %>
+  <% if (to < pages) { %><% if (to < pages-1) { %><span class="disabled">…</span><% } %><a href="<%= qs(pages) %>"><%= pages %></a><% } %>
+  <a class="<%= page >= pages ? 'disabled' : '' %>" href="<%= qs(Math.min(pages, page+1)) %>">Next</a>
+</div>

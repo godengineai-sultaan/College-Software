@@ -1,0 +1,35 @@
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="head">
+      <div class="logo">🎓</div>
+      <h1><%= settings.institution_name %></h1>
+      <p>Dual-Branch College Fee Management System</p>
+    </div>
+    <div class="body">
+      <% if (error) { %>
+        <div class="alert error"><span><%= error %></span></div>
+      <% } %>
+      <% (flash.error || []).forEach(function(m){ %><div class="alert error"><span><%= m %></span></div><% }); %>
+      <% (flash.info || []).forEach(function(m){ %><div class="alert info"><span><%= m %></span></div><% }); %>
+
+      <form action="/login" method="POST">
+        <%- csrfField() %>
+        <div class="field" style="margin-bottom:14px;">
+          <label for="username">Username</label>
+          <input type="text" id="username" name="username" autocomplete="username" required autofocus placeholder="e.g. admin">
+        </div>
+        <div class="field" style="margin-bottom:18px;">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" autocomplete="current-password" required placeholder="Your password">
+        </div>
+        <button type="submit" class="btn block"><%- icon('logout') %> Sign in</button>
+      </form>
+
+      <div class="auth-demo">
+        <strong>Demo accounts</strong> — all use the passwords shown:<br>
+        <code>admin</code> / Admin@123 (Super Admin) · <code>admin_a</code>, <code>admin_b</code> / Admin@123<br>
+        <code>accountant</code> / Account@123 · <code>reception</code> / Reception@123 · <code>viewer</code> / Viewer@123
+      </div>
+    </div>
+  </div>
+</div>

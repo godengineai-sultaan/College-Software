@@ -1,0 +1,48 @@
+<%
+  // Expects: receipt, items (+ res.locals: settings, currency, h, labelFor, constants)
+  const paid = Number(receipt.amount) || 0;
+%>
+<div class="receipt-paper" style="max-width:640px; margin:0 auto; background:#fff; border:1px solid var(--line); border-radius:10px; overflow:hidden;">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; padding:22px 26px; border-bottom:2px solid var(--brand);">
+    <div>
+      <div style="font-size:20px; font-weight:800; color:var(--brand-dark);"><%= settings.institution_name %></div>
+      <div class="small muted"><%= settings.institution_address %></div>
+      <div class="small muted"><%= settings.institution_phone %> · <%= settings.institution_email %></div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:12px; letter-spacing:.08em; color:var(--muted);">FEE RECEIPT</div>
+      <div style="font-size:16px; font-weight:800;"><%= receipt.receipt_no %></div>
+      <% if (receipt.status === 'cancelled') { %><span class="badge red">CANCELLED</span><% } else { %><span class="badge green">PAID</span><% } %>
+      <% if (receipt.cross_branch) { %><span class="badge blue">Cross-Branch</span><% } %>
+    </div>
+  </div>
+
+  <div style="padding:20px 26px;">
+    <div class="detail-grid" style="grid-template-columns:1fr 1fr;">
+      <div class="row"><span class="k">Student</span><span class="v"><%= receipt.student_name %></span></div>
+      <div class="row"><span class="k">Student ID</span><span class="v"><%= receipt.student_uid %></span></div>
+      <div class="row"><span class="k">Course / Sem</span><span class="v"><%= receipt.course_name || '—' %> · Sem <%= receipt.semester || '—' %></span></div>
+      <div class="row"><span class="k">Date</span><span class="v"><%= h.formatDate(receipt.paid_on) %></span></div>
+      <div class="row"><span class="k">Payment Mode</span><span class="v"><%= labelFor(constants.PAYMENT_MODES, receipt.payment_mode) %><%= receipt.reference_no ? ' · ' + receipt.reference_no : '' %></span></div>
+      <div class="row"><span class="k">Collected At</span><span class="v">Branch <%= receipt.collect_branch %><%= receipt.cross_branch ? ' (for Branch ' + receipt.student_branch_code + ')' : '' %></span></div>
+    </div>
+
+    <table class="data" style="margin-top:14px;">
+      <thead><tr><th>Fee Head</th><th class="text-right">Late Fee</th><th class="text-right">Amount</th></tr></thead>
+      <tbody>
+        <% items.forEach(function(it){ %>
+          <tr><td><%= it.fee_head %></td><td class="text-right"><%= it.late_fee ? h.money(it.late_fee, currency) : '—' %></td><td class="text-right"><%= h.money(it.amount, currency) %></td></tr>
+        <% }); %>
+      </tbody>
+      <tfoot><tr style="font-weight:800; background:#f8fafc;"><td colspan="2">Total Paid</td><td class="text-right"><%= h.money(paid, currency) %></td></tr></tfoot>
+    </table>
+
+    <div style="margin-top:12px; font-size:13px;"><strong>In words:</strong> <%= h.numberToWords(paid) %> <%= (settings.currency_symbol==='₹') ? 'Rupees Only' : 'Only' %></div>
+    <% if (receipt.remarks) { %><div class="small muted" style="margin-top:6px;">Remarks: <%= receipt.remarks %></div><% } %>
+
+    <div style="display:flex; justify-content:space-between; margin-top:34px; align-items:flex-end;">
+      <div class="small muted">Received by: <%= receipt.collected_by_name || '—' %><br>This is a computer-generated receipt.</div>
+      <div style="text-align:center;"><div style="border-top:1px solid var(--ink-soft); width:150px; padding-top:4px;" class="small">Authorised Signatory</div></div>
+    </div>
+  </div>
+</div>

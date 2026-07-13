@@ -1,0 +1,44 @@
+<div class="page-head">
+  <div>
+    <div class="breadcrumb"><a href="/notifications">Notifications</a> / Compose</div>
+    <h1>Compose Notification</h1>
+    <div class="sub">Send a manual SMS, email or dashboard alert.</div>
+  </div>
+  <a href="/notifications" class="btn secondary"><%- icon('back') %> Cancel</a>
+</div>
+
+<form action="/notifications/send" method="POST">
+  <%- csrfField() %>
+  <div class="card">
+    <div class="card__head"><h3>Message</h3></div>
+    <div class="card__body">
+      <div class="form-grid">
+        <div class="field">
+          <label>Channel <span class="req">*</span></label>
+          <select name="channel" required>
+            <% channels.forEach(function(c){ %><option value="<%= c %>"><%= h.titleCase(c) %></option><% }); %>
+          </select>
+          <span class="hint">
+            SMS is <%= smsEnabled ? 'enabled' : 'disabled' %>, Email is <%= emailEnabled ? 'enabled' : 'disabled' %>.
+            Messages on a disabled channel are queued.
+          </span>
+        </div>
+        <div class="field">
+          <label>Recipient <span class="req">*</span></label>
+          <input name="recipient" placeholder="Phone number or email address">
+          <span class="hint">Required for SMS/Email. Optional for dashboard alerts.</span>
+        </div>
+        <div class="field"><label>Recipient Name</label><input name="recipient_name" placeholder="e.g. Rahul Sharma"></div>
+        <div class="field"><label>Subject</label><input name="subject" placeholder="e.g. Fee Due Reminder"></div>
+        <div class="field full">
+          <label>Message <span class="req">*</span></label>
+          <textarea name="message" required placeholder="Type your message..."></textarea>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn"><%- icon('bell') %> Send Notification</button>
+        <a href="/notifications" class="btn ghost">Cancel</a>
+      </div>
+    </div>
+  </div>
+</form>

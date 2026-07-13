@@ -1,0 +1,87 @@
+<div class="page-head">
+  <div>
+    <div class="breadcrumb"><a href="/students">Students</a> / <%= isEdit ? 'Edit' : 'Add' %></div>
+    <h1><%= isEdit ? 'Edit Student' : 'Add Student' %></h1>
+    <% if (isEdit) { %><div class="sub"><%= student.unique_id %></div><% } %>
+  </div>
+  <a href="<%= isEdit ? '/students/'+student.id : '/students' %>" class="btn secondary"><%- icon('back') %> Cancel</a>
+</div>
+
+<form action="<%= isEdit ? '/students/'+student.id : '/students' %>" method="POST" enctype="multipart/form-data">
+  <%- csrfField() %>
+  <div class="card">
+    <div class="card__head"><h3>Personal Details</h3></div>
+    <div class="card__body">
+      <div class="form-grid">
+        <div class="field"><label>Full Name <span class="req">*</span></label><input name="name" value="<%= student.name || '' %>" required></div>
+        <div class="field"><label>Roll No.</label><input name="roll_no" value="<%= student.roll_no || '' %>"></div>
+        <div class="field"><label>Gender</label>
+          <select name="gender">
+            <option value="">—</option>
+            <% ['Male','Female','Other'].forEach(function(g){ %><option <%= student.gender===g?'selected':'' %>><%= g %></option><% }); %>
+          </select>
+        </div>
+        <div class="field"><label>Date of Birth</label><input type="date" name="dob" value="<%= student.dob || '' %>"></div>
+        <div class="field"><label>Category</label>
+          <select name="category">
+            <option value="">—</option>
+            <% ['General','OBC','SC','ST','EWS'].forEach(function(c){ %><option <%= student.category===c?'selected':'' %>><%= c %></option><% }); %>
+          </select>
+        </div>
+        <div class="field"><label>Status</label>
+          <select name="status">
+            <% statuses.forEach(function(s){ %><option value="<%= s.value %>" <%= (student.status||'active')===s.value?'selected':'' %>><%= s.label %></option><% }); %>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card__head"><h3>Academic & Branch</h3></div>
+    <div class="card__body">
+      <div class="form-grid">
+        <% if (!branchScopeId) { %>
+          <div class="field"><label>Branch <span class="req">*</span></label>
+            <select name="branch_id" required>
+              <option value="">Select branch</option>
+              <% branches.forEach(function(b){ %><option value="<%= b.id %>" <%= String(student.branch_id)==String(b.id)?'selected':'' %>>Branch <%= b.branch_code %> — <%= b.name %></option><% }); %>
+            </select>
+          </div>
+        <% } else { %>
+          <input type="hidden" name="branch_id" value="<%= branchScopeId %>">
+          <div class="field"><label>Branch</label><input value="Branch <%= currentUser.branch_code %>" disabled></div>
+        <% } %>
+        <div class="field"><label>Course</label>
+          <select name="course_id">
+            <option value="">—</option>
+            <% courses.forEach(function(c){ %><option value="<%= c.id %>" <%= String(student.course_id)==String(c.id)?'selected':'' %>><%= c.name %></option><% }); %>
+          </select>
+        </div>
+        <div class="field"><label>Semester</label><input type="number" name="semester" min="1" max="12" value="<%= student.semester || 1 %>"></div>
+        <div class="field"><label>Academic Year</label><input name="academic_year" value="<%= student.academic_year || settings.academic_year %>"></div>
+        <div class="field"><label>Admission Date</label><input type="date" name="admission_date" value="<%= student.admission_date || '' %>"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card__head"><h3>Contact & Guardian</h3></div>
+    <div class="card__body">
+      <div class="form-grid">
+        <div class="field"><label>Phone</label><input name="phone" value="<%= student.phone || '' %>"></div>
+        <div class="field"><label>Email</label><input type="email" name="email" value="<%= student.email || '' %>"></div>
+        <div class="field full"><label>Address</label><input name="address" value="<%= student.address || '' %>"></div>
+        <div class="field"><label>City</label><input name="city" value="<%= student.city || '' %>"></div>
+        <div class="field"><label>State</label><input name="state" value="<%= student.state || '' %>"></div>
+        <div class="field"><label>Guardian Name</label><input name="guardian_name" value="<%= student.guardian_name || '' %>"></div>
+        <div class="field"><label>Guardian Phone</label><input name="guardian_phone" value="<%= student.guardian_phone || '' %>"></div>
+        <div class="field"><label>Guardian Relation</label><input name="guardian_relation" value="<%= student.guardian_relation || '' %>"></div>
+      </div>
+      <div class="form-actions">
+        <button class="btn"><%- icon('save') %> <%= isEdit ? 'Save Changes' : 'Create Student' %></button>
+        <a href="<%= isEdit ? '/students/'+student.id : '/students' %>" class="btn ghost">Cancel</a>
+      </div>
+    </div>
+  </div>
+</form>

@@ -1,0 +1,67 @@
+<%
+  // Navigation groups; each item is [href, area, icon, label].
+  // Items hide automatically when the current role lacks the area.
+  const groups = [
+    { title: null, items: [
+      ['/dashboard', 'dashboard', 'dashboard', 'Dashboard'],
+    ]},
+    { title: 'Fees', items: [
+      ['/collection', 'collection', 'money',    'Fee Collection'],
+      ['/receipts',   'receipts',   'print',    'Receipts'],
+      ['/fees',       'fees',       'fees',     'Student Fees & Dues'],
+      ['/structures', 'structures', 'academics','Fee Structure'],
+      ['/discounts',  'structures', 'check',    'Discounts'],
+    ]},
+    { title: 'Students', items: [
+      ['/students',  'students',  'students', 'Students'],
+      ['/examforms', 'examforms', 'exams',    'Exam Forms'],
+    ]},
+    { title: 'Accounts', items: [
+      ['/expenses', 'expenses', 'building', 'Expenses'],
+    ]},
+    { title: 'Insights', items: [
+      ['/reports', 'reports', 'chart',    'Reports & Analytics'],
+      ['/exports', 'exports', 'download', 'Data Merge & Export'],
+    ]},
+    { title: 'Communication', items: [
+      ['/notifications', 'notifications', 'bell', 'Notifications'],
+    ]},
+    { title: 'System', items: [
+      ['/branches', 'branches', 'building',  'Branches'],
+      ['/courses',  'courses',  'courses',   'Courses & Fee Heads'],
+      ['/users',    'users',    'users',     'User Accounts'],
+      ['/audit',    'audit',    'eye',       'Audit Logs'],
+      ['/backup',   'backup',   'save',      'Backup & Restore'],
+      ['/settings', 'settings', 'settings',  'Settings'],
+    ]},
+  ];
+  const active = (href) => (currentPath === href || currentPath.startsWith(href + '/')) ? 'active' : '';
+%>
+<aside class="sidebar">
+  <div class="sidebar__brand">
+    <div class="logo"><%= (settings.institution_short || 'WS').slice(0,2).toUpperCase() %></div>
+    <div>
+      <%= settings.institution_short || 'WSchools' %>
+      <small>Fee Management System</small>
+    </div>
+  </div>
+  <nav class="nav">
+    <% groups.forEach(function(group){
+         const visible = group.items.filter(function(it){ return can(it[1]); });
+         if (!visible.length) return; %>
+      <% if (group.title) { %><div class="nav__section"><%= group.title %></div><% } %>
+      <% visible.forEach(function(it){ %>
+        <a href="<%= it[0] %>" class="<%= active(it[0]) %>"><%- icon(it[2]) %><span><%= it[3] %></span></a>
+      <% }); %>
+    <% }); %>
+
+    <div class="nav__section">Account</div>
+    <a href="/profile" class="<%= active('/profile') %>"><%- icon('profile') %><span>My Profile</span></a>
+    <form action="/logout" method="POST" style="margin:0;">
+      <%- csrfField() %>
+      <button type="submit" style="all:unset; cursor:pointer; display:flex; align-items:center; gap:11px; padding:9px 12px; border-radius:8px; color:var(--sidebar-ink); font-weight:500; width:100%;">
+        <%- icon('logout') %><span>Sign out</span>
+      </button>
+    </form>
+  </nav>
+</aside>

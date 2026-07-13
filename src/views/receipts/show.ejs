@@ -1,0 +1,28 @@
+<div class="page-head no-print">
+  <div>
+    <div class="breadcrumb"><a href="/receipts">Receipts</a> / <%= receipt.receipt_no %></div>
+    <h1>Receipt <%= receipt.receipt_no %></h1>
+  </div>
+  <div class="btn-group">
+    <a href="/receipts/<%= receipt.id %>/print" target="_blank" class="btn"><%- icon('print') %> Print / PDF</a>
+    <a href="/students/<%= receipt.student_id %>" class="btn secondary">Student profile</a>
+    <% if (canManage('receipts') && receipt.status !== 'cancelled') { %>
+      <form action="/receipts/<%= receipt.id %>/cancel" method="POST" data-confirm="Cancel this receipt and restore the student's dues?" style="margin:0;">
+        <%- csrfField() %><button class="btn danger"><%- icon('trash') %> Cancel</button>
+      </form>
+    <% } %>
+  </div>
+</div>
+
+<% if (isNew) { %>
+  <div class="alert success no-print"><span>✅ Payment recorded successfully. You can print the receipt below.</span></div>
+<% } %>
+<% if (receipt.status === 'cancelled') { %>
+  <div class="alert error no-print"><span>This receipt has been cancelled.</span></div>
+<% } %>
+
+<div class="card">
+  <div class="card__body">
+    <%- include('../partials/receiptPaper', { receipt: receipt, items: items }) %>
+  </div>
+</div>

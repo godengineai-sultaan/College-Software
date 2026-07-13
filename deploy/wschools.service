@@ -1,0 +1,31 @@
+# systemd unit for the WSchools Fee Management System (bare-metal / VM deploy).
+#
+# 1. Put the app in /opt/wschools and run `npm ci --omit=dev && npm run setup`.
+# 2. Create /opt/wschools/.env (see .env.example) with a strong SESSION_SECRET.
+# 3. Copy this file to /etc/systemd/system/wschools.service, then:
+#      sudo systemctl daemon-reload
+#      sudo systemctl enable --now wschools
+#      sudo systemctl status wschools
+
+[Unit]
+Description=WSchools College Fee Management System
+After=network.target
+
+[Service]
+Type=simple
+User=wschools
+Group=wschools
+WorkingDirectory=/opt/wschools
+EnvironmentFile=/opt/wschools/.env
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=5
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ReadWritePaths=/opt/wschools/data /opt/wschools/backups /opt/wschools/public/uploads
+
+[Install]
+WantedBy=multi-user.target

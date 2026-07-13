@@ -1,0 +1,43 @@
+{
+  "name": "college-software",
+  "version": "1.0.0",
+  "description": "A complete, modular College Management System (ERP) — admissions, academics, attendance, exams, fees, library, timetable and more. Built to be handed over to a non-technical client and managed end to end.",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "setup": "node src/db/migrate.js && node src/db/seed.js",
+    "migrate": "node src/db/migrate.js",
+    "seed": "node src/db/seed.js",
+    "reset": "node src/db/reset.js",
+    "backup:create": "node scripts/backup.js",
+    "restore": "node scripts/restore.js",
+    "check": "node scripts/check.js",
+    "test": "node --test test/unit.test.js test/fee.test.js test/integration.test.js",
+    "loadtest": "node scripts/loadtest.js"
+  },
+  "keywords": [
+    "college",
+    "erp",
+    "school-management",
+    "education",
+    "student-information-system"
+  ],
+  "author": "College Software",
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-ejs-layouts": "^2.5.1",
+    "express-session": "^1.18.1",
+    "method-override": "^3.0.0",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  }
+}

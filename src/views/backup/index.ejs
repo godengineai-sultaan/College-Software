@@ -1,0 +1,94 @@
+<%
+  // Human-readable file size.
+  function fmtSize(bytes) {
+    bytes = Number(bytes || 0);
+    if (bytes < 1024) return bytes + ' B';
+    const units = ['KB', 'MB', 'GB'];
+    let n = bytes / 1024, i = 0;
+    while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
+    return n.toFixed(1) + ' ' + units[i];
+  }
+%>
+<div class="page-head">
+  <div>
+    <h1>Backup &amp; Restore</h1>
+    <div class="sub">Snapshot the database file · <%= backups.length %> backup<%= backups.length === 1 ? '' : 's' %> on disk</div>
+  </div>
+  <div class="btn-group">
+    <% if (canManage('backup')) { %>
+      <form action="/backup/create" method="POST" style="display:inline;" data-confirm="Create a new backup of the database now?">
+        <%- csrfField() %>
+        <button class="btn"><%- icon('save') %> Create Backup Now</button>
+      </form>
+    <% } %>
+  </div>
+</div>
+
+<div class="alert info">
+  <span><%- icon('save', 16) %></span>
+  <div>
+    A backup is a consistent copy of the SQLite database file. Old backups are pruned automatically after the
+    retention window. For daily backups, schedule a cron job to POST to <code>/backup/create</code>.
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat">
+    <div class="stat__icon i-indigo"><%- icon('save', 22) %></div>
+    <div><div class="stat__val"><%= fmtSize(dbSize) %></div><div class="stat__label">Current Database Size</div></div>
+  </div>
+  <div class="stat">
+    <div class="stat__icon i-sky"><%- icon('calendar', 22) %></div>
+    <div><div class="stat__val"><%= retentionDays %> day<%= retentionDays === 1 ? '' : 's' %></div><div class="stat__label">Retention Window</div></div>
+  </div>
+  <div class="stat">
+    <div class="stat__icon i-green"><%- icon('download', 22) %></div>
+    <div><div class="stat__val"><%= backups.length %></div><div class="stat__label">Stored Backups</div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card__head"><h3>Database File</h3></div>
+  <div class="card__body">
+    <div class="detail-grid">
+      <div class="row"><span class="k">File Path</span><span class="v"><%= dbFile %></span></div>
+      <div class="row"><span class="k">Size</span><span class="v"><%= fmtSize(dbSize) %></span></div>
+      <div class="row"><span class="k">Retention</span><span class="v"><%= retentionDays %> day<%= retentionDays === 1 ? '' : 's' %> (older backups auto-deleted)</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card__head"><h3>Backups</h3></div>
+  <div class="card__body tight">
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr><th>Filename</th><th>Size</th><th>Created</th><th></th></tr>
+        </thead>
+        <tbody>
+          <% if (!backups.length) { %>
+            <tr><td colspan="4"><div class="empty"><div class="big">💾</div><h3>No backups yet</h3><p>Create your first backup with the button above.</p></div></td></tr>
+          <% } %>
+          <% backups.forEach(function(b){ %>
+            <tr>
+              <td><strong><%= b.name %></strong></td>
+              <td class="muted"><%= fmtSize(b.size) %></td>
+              <td class="muted"><%= h.formatDateTime(b.created) %></td>
+              <td class="nowrap">
+                <a class="icon-btn" href="/backup/download/<%= encodeURIComponent(b.name) %>" title="Download"><%- icon('download', 15) %></a>
+                <% if (canManage('backup')) { %>
+                  <form action="/backup/delete" method="POST" style="display:inline;" data-confirm="Delete this backup permanently?">
+                    <%- csrfField() %>
+                    <input type="hidden" name="name" value="<%= b.name %>">
+                    <button class="icon-btn danger" title="Delete"><%- icon('trash', 15) %></button>
+                  </form>
+                <% } %>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
