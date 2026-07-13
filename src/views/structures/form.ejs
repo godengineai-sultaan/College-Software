@@ -1,0 +1,60 @@
+<div class="page-head">
+  <div>
+    <div class="breadcrumb"><a href="/structures">Fee Structures</a> / <%= isEdit ? 'Edit' : 'Add' %> Fee Line</div>
+    <h1><%= isEdit ? 'Edit Fee Line' : 'Add Fee Line' %></h1>
+  </div>
+  <a href="/structures" class="btn secondary"><%- icon('back') %> Cancel</a>
+</div>
+
+<form action="<%= isEdit ? '/structures/'+line.id : '/structures' %>" method="POST">
+  <%- csrfField() %>
+  <div class="card">
+    <div class="card__head"><h3>Fee Line</h3></div>
+    <div class="card__body">
+      <div class="form-grid">
+        <div class="field"><label>Course <span class="req">*</span></label>
+          <select name="course_id" required <%= isEdit ? 'disabled' : '' %>>
+            <option value="">Select course</option>
+            <% courses.forEach(function(c){ %><option value="<%= c.id %>" <%= String(line.course_id)==String(c.id)?'selected':'' %>><%= c.name %></option><% }); %>
+          </select>
+        </div>
+        <div class="field"><label>Semester <span class="req">*</span></label>
+          <input type="number" name="semester" min="1" max="12" value="<%= line.semester || 1 %>" required <%= isEdit ? 'readonly' : '' %>>
+        </div>
+        <div class="field"><label>Fee Head <span class="req">*</span></label>
+          <select name="fee_head_id" required>
+            <option value="">Select fee head</option>
+            <% heads.forEach(function(hd){ %><option value="<%= hd.id %>" <%= String(line.fee_head_id)==String(hd.id)?'selected':'' %>><%= hd.name %></option><% }); %>
+          </select>
+        </div>
+        <div class="field"><label>Amount <span class="req">*</span></label>
+          <input type="number" name="amount" min="0" step="0.01" value="<%= line.amount != null ? line.amount : '' %>" required>
+        </div>
+        <div class="field"><label>Due Date</label>
+          <input type="date" name="due_date" value="<%= line.due_date || '' %>">
+        </div>
+        <div class="field"><label>Academic Year</label>
+          <input name="academic_year" value="<%= line.academic_year || settings.academic_year %>">
+        </div>
+        <div class="field"><label>Late Fee / day</label>
+          <input type="number" name="late_fee_per_day" min="0" step="0.01" value="<%= line.late_fee_per_day != null ? line.late_fee_per_day : settings.late_fee_per_day %>">
+        </div>
+        <% if (!branchScopeId) { %>
+          <div class="field"><label>Branch</label>
+            <select name="branch_id">
+              <option value="">All branches</option>
+              <% branches.forEach(function(b){ %><option value="<%= b.id %>" <%= String(line.branch_id)==String(b.id)?'selected':'' %>>Branch <%= b.branch_code %> — <%= b.name %></option><% }); %>
+            </select>
+            <span class="hint">Leave as “All branches” to apply this fee everywhere.</span>
+          </div>
+        <% } else { %>
+          <input type="hidden" name="branch_id" value="<%= branchScopeId %>">
+        <% } %>
+      </div>
+      <div class="form-actions">
+        <button class="btn"><%- icon('save') %> <%= isEdit ? 'Save Changes' : 'Add Fee Line' %></button>
+        <a href="/structures" class="btn ghost">Cancel</a>
+      </div>
+    </div>
+  </div>
+</form>

@@ -1,0 +1,67 @@
+<div class="page-head">
+  <div><div class="breadcrumb"><a href="/students">Students</a> / Bulk Upload</div><h1>Bulk Upload Students</h1><div class="sub">Import many students from a CSV file (Excel → Save As → CSV).</div></div>
+  <a href="/students" class="btn secondary"><%- icon('back') %> Back</a>
+</div>
+
+<% if (report) { %>
+  <div class="card">
+    <div class="card__head"><h3>Upload Report</h3></div>
+    <div class="card__body">
+      <div class="stats" style="margin-bottom:8px;">
+        <div class="stat"><div class="stat__icon i-indigo"><%- icon('students',20) %></div><div><div class="stat__val"><%= report.total %></div><div class="stat__label">Rows read</div></div></div>
+        <div class="stat"><div class="stat__icon i-green"><%- icon('check',20) %></div><div><div class="stat__val"><%= report.inserted %></div><div class="stat__label">Inserted</div></div></div>
+        <div class="stat"><div class="stat__icon i-amber"><%- icon('bell',20) %></div><div><div class="stat__val"><%= report.duplicates.length %></div><div class="stat__label">Duplicates skipped</div></div></div>
+        <div class="stat"><div class="stat__icon i-red"><%- icon('trash',20) %></div><div><div class="stat__val"><%= report.errors.length %></div><div class="stat__label">Errors</div></div></div>
+      </div>
+      <% if (report.errors.length) { %>
+        <h4 style="margin-top:14px;">Errors</h4>
+        <div class="table-wrap"><table class="data"><thead><tr><th>Line</th><th>Message</th></tr></thead><tbody>
+          <% report.errors.forEach(function(e){ %><tr><td><%= e.line %></td><td><%= e.message %></td></tr><% }); %>
+        </tbody></table></div>
+      <% } %>
+      <% if (report.duplicates.length) { %>
+        <h4 style="margin-top:14px;">Duplicates skipped</h4>
+        <div class="table-wrap"><table class="data"><thead><tr><th>Line</th><th>Name</th><th>Existing ID</th></tr></thead><tbody>
+          <% report.duplicates.forEach(function(d){ %><tr><td><%= d.line %></td><td><%= d.name %></td><td><%= d.existing %></td></tr><% }); %>
+        </tbody></table></div>
+      <% } %>
+      <div style="margin-top:16px;"><a href="/students" class="btn"><%- icon('students') %> View Students</a> <a href="/students/bulk" class="btn secondary">Upload another</a></div>
+    </div>
+  </div>
+<% } else { %>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card__head"><h3>Upload CSV</h3></div>
+      <div class="card__body">
+        <form action="/students/bulk" method="POST" enctype="multipart/form-data">
+          <%- csrfField() %>
+          <% if (!branchScopeId) { %>
+            <div class="field" style="margin-bottom:14px;"><label>Branch <span class="req">*</span></label>
+              <select name="branch_id" required>
+                <option value="">Select branch</option>
+                <% branches.forEach(function(b){ %><option value="<%= b.id %>">Branch <%= b.branch_code %> — <%= b.name %></option><% }); %>
+              </select>
+            </div>
+          <% } else { %>
+            <input type="hidden" name="branch_id" value="<%= branchScopeId %>">
+            <div class="field" style="margin-bottom:14px;"><label>Branch</label><input value="Branch <%= currentUser.branch_code %>" disabled></div>
+          <% } %>
+          <div class="field" style="margin-bottom:14px;"><label>CSV File <span class="req">*</span></label><input type="file" name="file" accept=".csv,text/csv" required></div>
+          <button class="btn"><%- icon('download') %> Validate & Import</button>
+        </form>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card__head"><h3>How it works</h3></div>
+      <div class="card__body">
+        <ol style="padding-left:18px; line-height:1.9; font-size:13.5px;">
+          <li>Download the <a href="/students/bulk/template">CSV template</a>.</li>
+          <li>Fill in one student per row. <code>course_code</code> must match an existing course (e.g. BCOM, BCA).</li>
+          <li>Upload — the validator checks required fields, unknown courses and duplicates (same phone in the branch).</li>
+          <li>Valid rows are imported and their fee ledger is auto-assigned.</li>
+        </ol>
+        <a href="/students/bulk/template" class="btn secondary"><%- icon('download') %> Download Template</a>
+      </div>
+    </div>
+  </div>
+<% } %>

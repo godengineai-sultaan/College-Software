@@ -1,0 +1,45 @@
+<div class="page-head">
+  <div>
+    <div class="breadcrumb"><a href="/examforms">Exam Forms</a> / <%= isEdit ? 'Edit' : 'New' %></div>
+    <h1><%= isEdit ? 'Edit Exam Form' : 'New Exam Form' %></h1>
+    <% if (isEdit) { %><div class="sub"><%= form.form_no %></div><% } %>
+  </div>
+  <a href="<%= isEdit ? '/examforms/'+form.id : '/examforms' %>" class="btn secondary"><%- icon('back') %> Cancel</a>
+</div>
+
+<form action="<%= isEdit ? '/examforms/'+form.id : '/examforms' %>" method="POST">
+  <%- csrfField() %>
+  <div class="card">
+    <div class="card__head"><h3>Exam Form Details</h3></div>
+    <div class="card__body">
+      <div class="form-grid">
+        <% if (isEdit) { %>
+          <div class="field"><label>Student</label><input value="<%= form.student_name %> (<%= form.student_uid %>)" disabled></div>
+        <% } else { %>
+          <div class="field"><label>Student ID <span class="req">*</span></label><input name="student_uid" value="<%= form.student_uid || '' %>" placeholder="e.g. STU-A-0001" required><span class="hint">Enter the student's unique ID.</span></div>
+        <% } %>
+        <div class="field"><label>Exam Type <span class="req">*</span></label>
+          <select name="exam_type">
+            <% examTypes.forEach(function(t){ %><option value="<%= t.value %>" <%= (form.exam_type||'regular')===t.value?'selected':'' %>><%= t.label %></option><% }); %>
+          </select>
+        </div>
+        <div class="field"><label>Session</label><input name="session" value="<%= form.session || '' %>" placeholder="e.g. May 2026"></div>
+        <div class="field"><label>Semester</label><input type="number" name="semester" min="1" max="12" value="<%= form.semester || '' %>"></div>
+        <div class="field"><label>Fee Amount</label><input type="number" name="fee_amount" min="0" step="0.01" value="<%= form.fee_amount != null ? form.fee_amount : 0 %>"></div>
+        <div class="field"><label>Status</label>
+          <select name="status">
+            <% statuses.forEach(function(s){ %><option value="<%= s.value %>" <%= (form.status||'submitted')===s.value?'selected':'' %>><%= s.label %></option><% }); %>
+          </select>
+        </div>
+        <div class="field full"><label>Subjects (for backlog/improvement)</label><textarea name="subjects" placeholder="List the subjects — only needed for backlog / improvement forms."><%= form.subjects || '' %></textarea></div>
+        <div class="field"><label>Payment</label>
+          <label class="hint" style="display:flex;align-items:center;gap:8px;color:var(--ink);font-weight:500;"><input type="checkbox" name="paid" value="1" style="width:auto;" <%= form.paid ? 'checked' : '' %>> Exam fee paid</label>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn"><%- icon('save') %> <%= isEdit ? 'Save Changes' : 'Create Exam Form' %></button>
+        <a href="<%= isEdit ? '/examforms/'+form.id : '/examforms' %>" class="btn ghost">Cancel</a>
+      </div>
+    </div>
+  </div>
+</form>

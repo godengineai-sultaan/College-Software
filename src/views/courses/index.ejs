@@ -1,0 +1,96 @@
+<div class="page-head">
+  <div>
+    <h1>Courses &amp; Fee Heads</h1>
+    <div class="sub"><%= courses.length %> course<%= courses.length === 1 ? '' : 's' %> · <%= heads.length %> fee head<%= heads.length === 1 ? '' : 's' %></div>
+  </div>
+  <% if (canManage('courses')) { %>
+    <div class="btn-group"><a href="/courses/new" class="btn"><%- icon('plus') %> Add Course</a></div>
+  <% } %>
+</div>
+
+<div class="card">
+  <div class="card__head">
+    <h3><%- icon('courses', 18) %> Courses</h3>
+    <% if (canManage('courses')) { %><a href="/courses/new" class="btn secondary sm"><%- icon('plus', 14) %> Add Course</a><% } %>
+  </div>
+  <div class="card__body tight">
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr><th>Course</th><th>Code</th><th class="text-right">Duration</th><th class="text-right">Semesters</th><th class="text-right">Students</th><th></th></tr>
+        </thead>
+        <tbody>
+          <% if (!courses.length) { %>
+            <tr><td colspan="6"><div class="empty"><div class="big">🎓</div><h3>No courses yet</h3><p>Add your first course to get started.</p></div></td></tr>
+          <% } %>
+          <% courses.forEach(function(c){ %>
+            <tr>
+              <td>
+                <strong><%= c.name %></strong><% if (!c.is_active) { %> <span class="badge gray">Inactive</span><% } %>
+                <% if (c.description) { %><br><span class="muted small"><%= c.description %></span><% } %>
+              </td>
+              <td><span class="badge indigo"><%= c.code %></span></td>
+              <td class="text-right"><%= c.duration_years %> yr</td>
+              <td class="text-right"><%= c.total_semesters %></td>
+              <td class="text-right"><%= (c.student_count || 0).toLocaleString('en-IN') %></td>
+              <td class="nowrap">
+                <% if (canManage('courses')) { %>
+                  <a class="icon-btn" href="/courses/<%= c.id %>/edit" title="Edit"><%- icon('edit', 15) %></a>
+                  <form action="/courses/<%= c.id %>/delete" method="POST" data-confirm="Delete course “<%= c.name %>”? This cannot be undone." style="display:inline;">
+                    <%- csrfField() %>
+                    <button class="icon-btn danger" title="Delete"><%- icon('trash', 15) %></button>
+                  </form>
+                <% } %>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card__head"><h3><%- icon('fees', 18) %> Fee Heads</h3></div>
+  <div class="card__body tight">
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr><th>Fee Head</th><th>Code</th><th class="text-right">Sort</th><th>Status</th><th></th></tr>
+        </thead>
+        <tbody>
+          <% if (!heads.length) { %>
+            <tr><td colspan="5"><div class="empty"><div class="big">🧾</div><h3>No fee heads yet</h3><p>Use the form below to add one.</p></div></td></tr>
+          <% } %>
+          <% heads.forEach(function(hd){ %>
+            <tr>
+              <td><strong><%= hd.name %></strong></td>
+              <td><%= hd.code || '—' %></td>
+              <td class="text-right"><%= hd.sort_order %></td>
+              <td><span class="badge <%= hd.is_active ? 'green' : 'gray' %>"><%= hd.is_active ? 'Active' : 'Inactive' %></span></td>
+              <td class="nowrap">
+                <% if (canManage('courses')) { %>
+                  <form action="/courses/heads/<%= hd.id %>/delete" method="POST" data-confirm="Delete fee head “<%= hd.name %>”?" style="display:inline;">
+                    <%- csrfField() %>
+                    <button class="icon-btn danger" title="Delete"><%- icon('trash', 15) %></button>
+                  </form>
+                <% } %>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <% if (canManage('courses')) { %>
+  <div class="card__body" style="border-top:1px solid var(--line);">
+    <form action="/courses/heads" method="POST" class="toolbar" style="margin:0;">
+      <%- csrfField() %>
+      <input name="name" placeholder="Fee head name" required style="min-width:200px;">
+      <input name="code" placeholder="Code (optional)" style="min-width:120px;">
+      <input type="number" name="sort_order" placeholder="Sort" value="0" min="0" style="min-width:90px;">
+      <button class="btn"><%- icon('plus', 14) %> Add Fee Head</button>
+    </form>
+  </div>
+  <% } %>
+</div>

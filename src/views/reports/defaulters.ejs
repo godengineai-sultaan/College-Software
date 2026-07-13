@@ -1,0 +1,69 @@
+<div class="page-head">
+  <div>
+    <h1>Defaulters Report</h1>
+    <div class="sub">
+      <%= rows.length.toLocaleString('en-IN') %> student<%= rows.length === 1 ? '' : 's' %> with dues ·
+      Total outstanding <strong style="color:var(--danger)"><%= h.money(totalDue, currency) %></strong>
+      <%= branchId ? ' · Branch ' + currentUser.branch_code : ' · All branches' %>
+    </div>
+  </div>
+  <div class="btn-group no-print">
+    <a href="/reports" class="btn ghost"><%- icon('back') %> Back</a>
+    <button class="btn secondary" onclick="window.print()"><%- icon('print') %> Print</button>
+  </div>
+</div>
+
+<!-- Branch filter (all-branch roles) -->
+<% if (!branchScopeId && branches.length > 1) { %>
+<div class="card no-print">
+  <div class="card__body" style="padding-bottom:6px;">
+    <form class="toolbar" method="GET" action="/reports/defaulters">
+      <select name="branch" onchange="this.form.submit()">
+        <option value="">All Branches</option>
+        <% branches.forEach(function(b){ %><option value="<%= b.id %>" <%= String(query.branch)==String(b.id)?'selected':'' %>>Branch <%= b.branch_code %> — <%= b.name %></option><% }); %>
+      </select>
+      <button class="btn secondary sm">Filter</button>
+      <% if (query.branch) { %><a href="/reports/defaulters" class="btn ghost sm">Clear</a><% } %>
+    </form>
+  </div>
+</div>
+<% } %>
+
+<div class="card">
+  <div class="card__body tight">
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr><th>Student ID</th><th>Name</th><th>Course / Sem</th><th>Phone</th><th>Branch</th><th class="text-right">Due</th><% if (can('collection')) { %><th class="no-print"></th><% } %></tr>
+        </thead>
+        <tbody>
+          <% if (!rows.length) { %>
+            <tr><td colspan="<%= can('collection') ? 7 : 6 %>"><div class="empty"><div class="big">🎉</div><h3>No dues pending</h3><p>Every student is up to date.</p></div></td></tr>
+          <% } %>
+          <% rows.forEach(function(s){ %>
+            <tr>
+              <td><a href="/students/<%= s.id %>"><strong><%= s.unique_id %></strong></a></td>
+              <td><%= s.name %></td>
+              <td><%= s.course_name || '—' %><br><span class="muted small">Sem <%= s.semester %></span></td>
+              <td class="muted"><%= s.phone || '—' %></td>
+              <td><span class="badge indigo"><%= s.branch_code || '—' %></span></td>
+              <td class="text-right"><strong style="color:var(--danger)"><%= h.money(s.due, currency) %></strong></td>
+              <% if (can('collection')) { %>
+                <td class="nowrap no-print"><a class="btn sm" href="/collection?student=<%= s.id %>"><%- icon('money', 14) %> Collect</a></td>
+              <% } %>
+            </tr>
+          <% }); %>
+        </tbody>
+        <% if (rows.length) { %>
+        <tfoot>
+          <tr>
+            <td colspan="5" class="text-right"><strong>Total outstanding</strong></td>
+            <td class="text-right"><strong style="color:var(--danger)"><%= h.money(totalDue, currency) %></strong></td>
+            <% if (can('collection')) { %><td class="no-print"></td><% } %>
+          </tr>
+        </tfoot>
+        <% } %>
+      </table>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title ? title + ' · ' : '' %><%= appName %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+</head>
+<body>
+  <div class="app">
+    <%- include('../partials/sidebar') %>
+    <div class="backdrop"></div>
+    <div class="main">
+      <header class="topbar">
+        <button class="hamburger" aria-label="Menu"><%- icon('menu', 22) %></button>
+        <h1 class="page-title"><%= title || 'Dashboard' %></h1>
+        <div class="spacer"></div>
+        <% if (currentUser.branch_code) { %>
+          <span class="badge indigo" title="Your branch"><%- icon('building', 13) %> Branch <%= currentUser.branch_code %></span>
+        <% } else { %>
+          <span class="badge gray" title="Access to all branches">All Branches</span>
+        <% } %>
+        <div class="user">
+          <div style="text-align:right; line-height:1.2;">
+            <div style="font-weight:600; color:var(--ink);"><%= currentUser.name %></div>
+            <div class="small muted"><%= h.titleCase(currentUser.role) %></div>
+          </div>
+          <div class="avatar"><%= (currentUser.name || '?').trim().charAt(0).toUpperCase() %></div>
+        </div>
+      </header>
+      <main class="content">
+        <%- include('../partials/flash') %>
+        <%- body %>
+      </main>
+    </div>
+  </div>
+  <script src="/js/app.js"></script>
+</body>
+</html>

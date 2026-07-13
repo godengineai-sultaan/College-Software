@@ -1,0 +1,38 @@
+<div class="page-head">
+  <div>
+    <div class="breadcrumb"><a href="/branches">Branches</a> / <%= isEdit ? 'Edit' : 'Add' %></div>
+    <h1><%= isEdit ? 'Edit Branch' : 'Add Branch' %></h1>
+    <% if (isEdit) { %><div class="sub">Branch <%= branch.branch_code %></div><% } %>
+  </div>
+  <a href="/branches" class="btn secondary"><%- icon('back') %> Cancel</a>
+</div>
+
+<form action="<%= isEdit ? '/branches/'+branch.id : '/branches' %>" method="POST">
+  <%- csrfField() %>
+  <div class="card">
+    <div class="card__head"><h3>Branch Details</h3></div>
+    <div class="card__body">
+      <div class="form-grid">
+        <div class="field">
+          <label>Branch Code <span class="req">*</span></label>
+          <input name="branch_code" value="<%= branch.branch_code || '' %>" maxlength="8" placeholder="e.g. A" style="text-transform:uppercase;" required>
+          <span class="hint">Short code used in auto-generated IDs (A, B, C…).</span>
+        </div>
+        <div class="field"><label>Name <span class="req">*</span></label><input name="name" value="<%= branch.name || '' %>" required></div>
+        <div class="field full"><label>Address</label><input name="address" value="<%= branch.address || '' %>"></div>
+        <div class="field"><label>Phone</label><input name="phone" value="<%= branch.phone || '' %>"></div>
+        <div class="field"><label>Email</label><input type="email" name="email" value="<%= branch.email || '' %>"></div>
+        <div class="field full">
+          <label style="display:flex;align-items:center;gap:8px;font-weight:600;">
+            <input type="checkbox" name="is_active" value="1" style="width:auto;" <%= (branch.is_active === undefined || branch.is_active) ? 'checked' : '' %>>
+            Active — branch is operational and selectable in pickers
+          </label>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn"><%- icon('save') %> <%= isEdit ? 'Save Changes' : 'Create Branch' %></button>
+        <a href="/branches" class="btn ghost">Cancel</a>
+      </div>
+    </div>
+  </div>
+</form>

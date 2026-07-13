@@ -1,0 +1,42 @@
+<div class="page-head">
+  <div><h1>My Profile</h1><div class="sub">Your account details</div></div>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card__head"><h3>Account</h3></div>
+    <div class="card__body">
+      <div class="profile-head">
+        <div class="profile-photo"><%= (currentUser.name || '?').charAt(0).toUpperCase() %></div>
+        <div>
+          <h3 style="margin:0;"><%= currentUser.name %></h3>
+          <div class="muted">@<%= currentUser.username %></div>
+          <div class="tag-list" style="margin-top:6px;">
+            <span class="badge indigo"><%= h.titleCase(currentUser.role) %></span>
+            <% if (currentUser.branch_code) { %><span class="badge blue">Branch <%= currentUser.branch_code %></span><% } else { %><span class="badge gray">All Branches</span><% } %>
+          </div>
+        </div>
+      </div>
+      <form action="/profile" method="POST" style="margin-top:6px;">
+        <%- csrfField() %>
+        <div class="field" style="margin-bottom:12px;"><label>Full name</label><input name="name" value="<%= currentUser.name %>" required></div>
+        <div class="field" style="margin-bottom:12px;"><label>Email</label><input type="email" name="email" value="<%= currentUser.email || '' %>"></div>
+        <div class="field" style="margin-bottom:12px;"><label>Phone</label><input name="phone" value="<%= currentUser.phone || '' %>"></div>
+        <button class="btn"><%- icon('save') %> Save changes</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card__head"><h3>Security</h3></div>
+    <div class="card__body">
+      <p class="muted small">Keep your account secure by using a strong, unique password.</p>
+      <a href="/profile/password" class="btn secondary"><%- icon('key') %> Change password</a>
+      <hr class="sep">
+      <div class="detail-grid">
+        <div class="row"><span class="k">Last login</span><span class="v"><%= h.formatDateTime(currentUser.last_login_at) %></span></div>
+        <div class="row"><span class="k">Member since</span><span class="v"><%= h.formatDate(currentUser.created_at) %></span></div>
+      </div>
+    </div>
+  </div>
+</div>

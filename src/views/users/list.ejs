@@ -1,0 +1,74 @@
+<%
+  var roleColors = { super_admin: 'indigo', branch_admin: 'blue', accountant: 'green', receptionist: 'amber', viewer: 'gray' };
+%>
+<div class="page-head">
+  <div>
+    <h1>User Accounts</h1>
+    <div class="sub"><%= total.toLocaleString('en-IN') %> user<%= total === 1 ? '' : 's' %></div>
+  </div>
+  <div class="btn-group">
+    <% if (canManage('users')) { %>
+      <a href="/users/new" class="btn"><%- icon('plus') %> Add User</a>
+    <% } %>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card__body" style="padding-bottom:6px;">
+    <form class="toolbar" method="GET" action="/users">
+      <div class="search-box">
+        <span class="ic"><%- icon('search', 16) %></span>
+        <input type="text" name="q" value="<%= query.q || '' %>" placeholder="Search name, username, email...">
+      </div>
+      <select name="role" onchange="this.form.submit()">
+        <option value="">All Roles</option>
+        <% roles.forEach(function(r){ %><option value="<%= r.value %>" <%= query.role===r.value?'selected':'' %>><%= r.label %></option><% }); %>
+      </select>
+      <select name="branch" onchange="this.form.submit()">
+        <option value="">All Branches</option>
+        <% branches.forEach(function(b){ %><option value="<%= b.id %>" <%= String(query.branch)==String(b.id)?'selected':'' %>>Branch <%= b.branch_code %> — <%= b.name %></option><% }); %>
+      </select>
+      <button class="btn secondary sm">Filter</button>
+      <% if (query.q || query.role || query.branch) { %><a href="/users" class="btn ghost sm">Clear</a><% } %>
+    </form>
+  </div>
+  <div class="card__body tight">
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr><th>Name</th><th>Username</th><th>Role</th><th>Branch</th><th>Status</th><th>Last Login</th><th></th></tr>
+        </thead>
+        <tbody>
+          <% if (!users.length) { %>
+            <tr><td colspan="7"><div class="empty"><div class="big">👤</div><h3>No users found</h3><p>Try adjusting filters or add a new user.</p></div></td></tr>
+          <% } %>
+          <% users.forEach(function(u){ %>
+            <tr>
+              <td><strong><%= u.name %></strong></td>
+              <td class="muted">@<%= u.username %></td>
+              <td><span class="badge <%= roleColors[u.role] || 'gray' %>"><%= h.titleCase(u.role) %></span></td>
+              <td>
+                <% if (u.branch_code) { %><span class="badge indigo"><%= u.branch_code %></span><% } else { %><span class="badge gray">All</span><% } %>
+              </td>
+              <td><span class="badge <%= u.status==='active' ? 'green' : 'gray' %>"><%= h.titleCase(u.status) %></span></td>
+              <td class="muted"><%= h.formatDateTime(u.last_login_at) %></td>
+              <td class="nowrap">
+                <% if (canManage('users')) { %>
+                  <a class="icon-btn" href="/users/<%= u.id %>/edit" title="Edit"><%- icon('edit', 15) %></a>
+                  <a class="icon-btn" href="/users/<%= u.id %>/password" title="Reset password"><%- icon('key', 15) %></a>
+                  <% if (u.id !== currentUser.id) { %>
+                    <form action="/users/<%= u.id %>/delete" method="POST" style="display:inline;" data-confirm="Delete user @<%= u.username %>? This cannot be undone.">
+                      <%- csrfField() %>
+                      <button class="icon-btn danger" title="Delete"><%- icon('trash', 15) %></button>
+                    </form>
+                  <% } %>
+                <% } %>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <%- include('../partials/pagination', { page: page, pages: pages, baseQuery: baseQuery }) %>
+  </div>
+</div>

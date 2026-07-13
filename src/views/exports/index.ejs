@@ -1,0 +1,80 @@
+<%
+  // Build the query string carried onto every download link so the current
+  // branch/date filters apply to the file. Scoped users are branch-locked
+  // server-side, so we never emit a branch param for them.
+  const dl = {};
+  if (!branchScopeId && query.branch) dl.branch = query.branch;
+  if (from) dl.from = from;
+  if (to) dl.to = to;
+  const qs = Object.keys(dl).length
+    ? '?' + Object.entries(dl).map(function(e){ return encodeURIComponent(e[0]) + '=' + encodeURIComponent(e[1]); }).join('&')
+    : '';
+%>
+<div class="page-head">
+  <div>
+    <h1>Data Merge &amp; Export</h1>
+    <div class="sub">
+      Download consolidated, cross-branch datasets for reconciliation and audit.
+      <%= branchId ? ' · Branch ' + currentUser.branch_code : ' · All branches' %>
+    </div>
+  </div>
+  <div class="btn-group">
+    <a href="/reports" class="btn secondary"><%- icon('chart') %> Analytics</a>
+  </div>
+</div>
+
+<div class="alert info">
+  <div><%- icon('building', 16) %></div>
+  <div>
+    <strong>Cross-branch reconciliation, no double counting.</strong>
+    Every payment is attributed to the <em>collecting</em> branch. A student from Branch A who
+    pays at Branch B appears once — as a cross-branch receipt under Branch B — so summing each
+    branch's collections gives the true group total with nothing counted twice. The consolidated
+    workbook's <strong>Reconciliation</strong> sheet lays out collections, expenses, net, cross-branch
+    volume and outstanding dues per branch, with a grand total.
+  </div>
+</div>
+
+<!-- Filters carried onto the download links -->
+<div class="card">
+  <div class="card__head"><h3>Scope &amp; date range</h3></div>
+  <div class="card__body" style="padding-bottom:6px;">
+    <form class="toolbar" method="GET" action="/exports">
+      <% if (!branchScopeId && branches.length > 1) { %>
+        <select name="branch" onchange="this.form.submit()">
+          <option value="">All Branches</option>
+          <% branches.forEach(function(b){ %><option value="<%= b.id %>" <%= String(query.branch)==String(b.id)?'selected':'' %>>Branch <%= b.branch_code %> — <%= b.name %></option><% }); %>
+        </select>
+      <% } %>
+      <div class="field"><label class="small muted">From (receipts / expenses)</label><input type="date" name="from" value="<%= from || '' %>"></div>
+      <div class="field"><label class="small muted">To (receipts / expenses)</label><input type="date" name="to" value="<%= to || '' %>"></div>
+      <button class="btn secondary sm">Apply to downloads</button>
+      <% if (query.from || query.to || query.branch) { %><a href="/exports" class="btn ghost sm">Clear</a><% } %>
+    </form>
+    <p class="muted small" style="margin:4px 2px 0;">Date filters apply to the Receipts and Expenses data. Students, Fee Ledger and Exam Forms always export in full for the selected branch.</p>
+  </div>
+</div>
+
+<!-- Consolidated workbook -->
+<div class="card">
+  <div class="card__head"><h3>Consolidated workbook</h3></div>
+  <div class="card__body">
+    <p style="margin-top:0;">A single Excel file with six worksheets: <strong>Students</strong>, <strong>Fee Ledger</strong>,
+      <strong>Receipts</strong>, <strong>Expenses</strong>, <strong>Exam Forms</strong> and <strong>Reconciliation</strong>.
+      Ideal for month-end merge and audit.</p>
+    <a class="btn" href="/exports/consolidated.xls<%= qs %>"><%- icon('download') %> Download 6-sheet Excel (.xls)</a>
+  </div>
+</div>
+
+<!-- Individual CSVs -->
+<div class="card">
+  <div class="card__head"><h3>Individual CSV extracts</h3></div>
+  <div class="card__body">
+    <div class="btn-group">
+      <a class="btn secondary" href="/exports/students.csv<%= qs %>"><%- icon('students', 15) %> Students CSV</a>
+      <a class="btn secondary" href="/exports/receipts.csv<%= qs %>"><%- icon('money', 15) %> Receipts CSV</a>
+      <a class="btn secondary" href="/exports/expenses.csv<%= qs %>"><%- icon('building', 15) %> Expenses CSV</a>
+    </div>
+    <p class="muted small" style="margin-bottom:0;">CSVs open cleanly in Excel or Google Sheets (UTF-8 with BOM), ready to merge with other branches' extracts.</p>
+  </div>
+</div>

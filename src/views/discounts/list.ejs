@@ -1,0 +1,80 @@
+<%
+  const badgeFor = (st) => (st === 'approved' ? 'green' : (st === 'rejected' ? 'red' : 'amber'));
+%>
+<div class="page-head">
+  <div>
+    <h1>Discounts</h1>
+    <div class="sub"><%= total.toLocaleString('en-IN') %> request<%= total === 1 ? '' : 's' %><%= branchScopeId ? ' · Branch ' + currentUser.branch_code : '' %></div>
+  </div>
+  <div class="btn-group">
+    <% if (canManage('structures')) { %>
+      <a href="/discounts/new" class="btn"><%- icon('plus') %> Request Discount</a>
+    <% } %>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card__body" style="padding-bottom:6px;">
+    <form class="toolbar" method="GET" action="/discounts">
+      <select name="status" onchange="this.form.submit()">
+        <option value="">Any Status</option>
+        <% statuses.forEach(function(s){ %><option value="<%= s %>" <%= query.status===s?'selected':'' %>><%= h.titleCase(s) %></option><% }); %>
+      </select>
+      <% if (!branchScopeId && branches.length > 1) { %>
+        <select name="branch" onchange="this.form.submit()">
+          <option value="">All Branches</option>
+          <% branches.forEach(function(b){ %><option value="<%= b.id %>" <%= String(query.branch)==String(b.id)?'selected':'' %>>Branch <%= b.branch_code %> — <%= b.name %></option><% }); %>
+        </select>
+      <% } %>
+      <button class="btn secondary sm">Filter</button>
+      <% if (query.status || query.branch) { %><a href="/discounts" class="btn ghost sm">Clear</a><% } %>
+    </form>
+  </div>
+  <div class="card__body tight">
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr>
+            <th>Student</th><th>Fee Head</th><th class="text-right">Amount</th>
+            <th>Reason</th><th>Status</th><th>Requested By</th><th>Decided By</th><th>Requested</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (!discounts.length) { %>
+            <tr><td colspan="9"><div class="empty"><div class="big">🏷️</div><h3>No discount requests</h3><p><%= query.status ? 'None with this status.' : 'Raise one with “Request Discount”.' %></p></div></td></tr>
+          <% } %>
+          <% discounts.forEach(function(d){ %>
+            <tr>
+              <td>
+                <% if (d.student_id) { %><a href="/students/<%= d.student_id %>"><strong><%= d.student_uid || '—' %></strong></a><% } else { %><strong>—</strong><% } %>
+                <br><span class="muted small"><%= d.student_name || '' %></span>
+              </td>
+              <td><%= d.fee_head || '—' %></td>
+              <td class="text-right"><strong><%= h.money(d.amount, currency) %></strong></td>
+              <td class="wrap muted"><%= d.reason || '—' %></td>
+              <td><span class="badge <%= badgeFor(d.status) %>"><%= h.titleCase(d.status) %></span></td>
+              <td class="muted"><%= d.requested_by_name || '—' %></td>
+              <td class="muted"><%= d.approved_by_name || '—' %></td>
+              <td class="muted"><%= h.formatDate(d.created_at) %></td>
+              <td class="nowrap">
+                <% if (d.status === 'pending' && canManage('structures')) { %>
+                  <form action="/discounts/<%= d.id %>/approve" method="POST" style="display:inline-block; margin:0;" data-confirm="Approve this discount and apply it to the ledger?">
+                    <%- csrfField() %>
+                    <button class="btn success sm"><%- icon('check',14) %> Approve</button>
+                  </form>
+                  <form action="/discounts/<%= d.id %>/reject" method="POST" style="display:inline-block; margin:0;" data-confirm="Reject this discount request?">
+                    <%- csrfField() %>
+                    <button class="btn danger sm">Reject</button>
+                  </form>
+                <% } else { %>
+                  <span class="muted small"><%= d.decided_at ? h.formatDate(d.decided_at) : '' %></span>
+                <% } %>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <%- include('../partials/pagination', { page: page, pages: pages, baseQuery: baseQuery }) %>
+  </div>
+</div>

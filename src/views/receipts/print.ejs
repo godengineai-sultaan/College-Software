@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Receipt <%= receipt.receipt_no %></title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    body { background:#fff; padding:24px; }
+    @media print { body { padding:0; } .print-actions { display:none; } }
+    .print-actions { max-width:640px; margin:0 auto 16px; display:flex; gap:8px; justify-content:flex-end; }
+  </style>
+</head>
+<body onload="window.print()">
+  <div class="print-actions">
+    <button class="btn" onclick="window.print()">Print</button>
+    <button class="btn secondary" onclick="window.close()">Close</button>
+  </div>
+  <%- include('../partials/receiptPaper', { receipt: receipt, items: items }) %>
+</body>
+</html>

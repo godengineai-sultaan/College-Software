@@ -1,0 +1,125 @@
+<div class="page-head">
+  <div>
+    <h1>Reports &amp; Analytics</h1>
+    <div class="sub">
+      <%= branchId ? ('Branch ' + currentUser.branch_code) : 'All branches consolidated' %>
+      <% if (from || to) { %> · <%= from ? h.formatDate(from) : '…' %> → <%= to ? h.formatDate(to) : '…' %><% } %>
+    </div>
+  </div>
+  <div class="btn-group">
+    <a href="/reports/defaulters" class="btn secondary"><%- icon('fees') %> Defaulters</a>
+    <a href="/reports/collection" class="btn secondary"><%- icon('money') %> Collection Report</a>
+    <% if (can('exports')) { %><a href="/exports" class="btn"><%- icon('download') %> Export to Excel</a><% } %>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="card">
+  <div class="card__body" style="padding-bottom:6px;">
+    <form class="toolbar" method="GET" action="/reports">
+      <% if (!branchScopeId && branches.length > 1) { %>
+        <select name="branch" onchange="this.form.submit()">
+          <option value="">All Branches</option>
+          <% branches.forEach(function(b){ %><option value="<%= b.id %>" <%= String(query.branch)==String(b.id)?'selected':'' %>>Branch <%= b.branch_code %> — <%= b.name %></option><% }); %>
+        </select>
+      <% } %>
+      <div class="field"><label class="small muted">From</label><input type="date" name="from" value="<%= from || '' %>"></div>
+      <div class="field"><label class="small muted">To</label><input type="date" name="to" value="<%= to || '' %>"></div>
+      <button class="btn secondary sm">Apply</button>
+      <% if (query.from || query.to || query.branch) { %><a href="/reports" class="btn ghost sm">Clear</a><% } %>
+    </form>
+  </div>
+</div>
+
+<!-- KPI tiles -->
+<div class="stats">
+  <div class="stat">
+    <div class="stat__icon i-green"><%- icon('download', 22) %></div>
+    <div><div class="stat__val"><%= h.money(d.totalCollection, currency) %></div><div class="stat__label">Total Collections</div></div>
+  </div>
+  <div class="stat">
+    <div class="stat__icon i-amber"><%- icon('building', 22) %></div>
+    <div><div class="stat__val"><%= h.money(d.totalExpense, currency) %></div><div class="stat__label">Total Expenses</div></div>
+  </div>
+  <div class="stat">
+    <div class="stat__icon <%= d.netCollection >= 0 ? 'i-indigo' : 'i-red' %>"><%- icon('chart', 22) %></div>
+    <div><div class="stat__val"><%= h.money(d.netCollection, currency) %></div><div class="stat__label">Net Collection (Coll − Exp)</div></div>
+  </div>
+  <div class="stat">
+    <div class="stat__icon i-red"><%- icon('fees', 22) %></div>
+    <div><div class="stat__val"><%= h.money(d.outstanding, currency) %></div><div class="stat__label">Outstanding Dues</div></div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- Monthly collection trend -->
+  <div class="card">
+    <div class="card__head"><h3>Monthly Collection Trend</h3></div>
+    <div class="card__body">
+      <%- include('../partials/bars', { items: d.monthly.map(function(m){ return { label: m.ym, value: m.total, sub: h.money(m.total, currency) }; }) }) %>
+    </div>
+  </div>
+
+  <!-- Payment mode distribution -->
+  <div class="card">
+    <div class="card__head"><h3>Payment Mode Distribution</h3></div>
+    <div class="card__body">
+      <%- include('../partials/bars', { items: d.modeDist.map(function(m){ return { label: labelFor(constants.PAYMENT_MODES, m.payment_mode), value: m.total, sub: h.money(m.total, currency) + ' · ' + m.count, color: '#0ea5e9' }; }) }) %>
+    </div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- Fee status breakdown -->
+  <div class="card">
+    <div class="card__head"><h3>Fee Status Breakdown</h3></div>
+    <div class="card__body">
+      <% const fsTotal = (d.feeStatus.unpaid + d.feeStatus.partial + d.feeStatus.paid + d.feeStatus.waived) || 1; %>
+      <div class="tag-list" style="margin-bottom:14px;">
+        <span class="badge green">Paid <%= d.feeStatus.paid %></span>
+        <span class="badge amber">Partial <%= d.feeStatus.partial %></span>
+        <span class="badge red">Unpaid <%= d.feeStatus.unpaid %></span>
+        <span class="badge gray">Waived <%= d.feeStatus.waived %></span>
+      </div>
+      <%- include('../partials/bars', { max: fsTotal, items: [
+        { label: 'Paid', value: d.feeStatus.paid, sub: d.feeStatus.paid + ' lines', color: '#16a34a' },
+        { label: 'Partial', value: d.feeStatus.partial, sub: d.feeStatus.partial + ' lines', color: '#d97706' },
+        { label: 'Unpaid', value: d.feeStatus.unpaid, sub: d.feeStatus.unpaid + ' lines', color: '#dc2626' },
+        { label: 'Waived', value: d.feeStatus.waived, sub: d.feeStatus.waived + ' lines', color: '#94a3b8' },
+      ] }) %>
+    </div>
+  </div>
+
+  <!-- Collection by course -->
+  <div class="card">
+    <div class="card__head"><h3>Collection by Course</h3></div>
+    <div class="card__body">
+      <%- include('../partials/bars', { items: d.byCourse.map(function(c){ return { label: c.course || '—', value: c.total, sub: h.money(c.total, currency), color: '#4f46e5' }; }) }) %>
+    </div>
+  </div>
+</div>
+
+<!-- Branch comparison (all-branch roles only) -->
+<% if (d.branchCompare) { %>
+<div class="card">
+  <div class="card__head"><h3>Branch Comparison</h3></div>
+  <div class="card__body tight">
+    <div class="table-wrap">
+      <table class="data">
+        <thead><tr><th>Branch</th><th>Students</th><th class="text-right">Collected</th><th class="text-right">Expenses</th><th class="text-right">Net</th></tr></thead>
+        <tbody>
+          <% d.branchCompare.forEach(function(b){ %>
+            <tr>
+              <td><span class="badge indigo">Branch <%= b.branch_code %></span> <%= b.name %></td>
+              <td><%= b.students %></td>
+              <td class="text-right"><%= h.money(b.collected, currency) %></td>
+              <td class="text-right"><%= h.money(b.spent, currency) %></td>
+              <td class="text-right"><strong><%= h.money(b.collected - b.spent, currency) %></strong></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<% } %>

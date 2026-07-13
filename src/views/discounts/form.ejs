@@ -1,0 +1,44 @@
+<div class="page-head">
+  <div>
+    <div class="breadcrumb"><a href="/discounts">Discounts</a> / Request</div>
+    <h1>Request Discount</h1>
+    <div class="sub">Reduce a student's dues on a specific fee head. Small amounts may auto-approve.</div>
+  </div>
+  <a href="/discounts" class="btn secondary"><%- icon('back') %> Cancel</a>
+</div>
+
+<form action="/discounts" method="POST">
+  <%- csrfField() %>
+  <div class="card">
+    <div class="card__head"><h3>Discount Details</h3></div>
+    <div class="card__body">
+      <div class="form-grid">
+        <div class="field">
+          <label>Student ID <span class="req">*</span></label>
+          <input name="student_uid" value="" placeholder="e.g. COL-A-25-0001" required>
+          <span class="hint">Enter the student's unique ID exactly as it appears on their profile.</span>
+        </div>
+        <div class="field">
+          <label>Fee Head</label>
+          <select name="fee_head">
+            <option value="">— Select fee head —</option>
+            <% feeHeads.forEach(function(fh){ %><option value="<%= fh.name %>"><%= fh.name %></option><% }); %>
+          </select>
+          <span class="hint">Matching a head on the student's ledger lets the discount apply automatically.</span>
+        </div>
+        <div class="field">
+          <label>Amount <span class="req">*</span></label>
+          <input type="number" name="amount" min="1" step="0.01" value="" required>
+        </div>
+        <div class="field full">
+          <label>Reason</label>
+          <textarea name="reason" placeholder="Scholarship, hardship, staff ward, sibling concession..."></textarea>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn"><%- icon('save') %> Submit Request</button>
+        <a href="/discounts" class="btn ghost">Cancel</a>
+      </div>
+    </div>
+  </div>
+</form>

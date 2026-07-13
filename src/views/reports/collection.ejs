@@ -1,0 +1,87 @@
+<div class="page-head">
+  <div>
+    <h1>Collection Report</h1>
+    <div class="sub">
+      <%= h.formatDate(from) %> → <%= h.formatDate(to) %>
+      <%= branchId ? ' · Branch ' + currentUser.branch_code : ' · All branches' %>
+    </div>
+  </div>
+  <div class="btn-group no-print">
+    <a href="/reports" class="btn ghost"><%- icon('back') %> Back</a>
+    <% if (can('exports')) { %><a href="/exports?from=<%= from %>&to=<%= to %><%= branchId && !branchScopeId ? '&branch=' + branchId : '' %>" class="btn secondary"><%- icon('download') %> Export</a><% } %>
+    <button class="btn secondary" onclick="window.print()"><%- icon('print') %> Print</button>
+  </div>
+</div>
+
+<!-- Date-range + branch filter -->
+<div class="card no-print">
+  <div class="card__body" style="padding-bottom:6px;">
+    <form class="toolbar" method="GET" action="/reports/collection">
+      <% if (!branchScopeId && branches.length > 1) { %>
+        <select name="branch" onchange="this.form.submit()">
+          <option value="">All Branches</option>
+          <% branches.forEach(function(b){ %><option value="<%= b.id %>" <%= String(query.branch)==String(b.id)?'selected':'' %>>Branch <%= b.branch_code %> — <%= b.name %></option><% }); %>
+        </select>
+      <% } %>
+      <div class="field"><label class="small muted">From</label><input type="date" name="from" value="<%= from || '' %>"></div>
+      <div class="field"><label class="small muted">To</label><input type="date" name="to" value="<%= to || '' %>"></div>
+      <button class="btn secondary sm">Apply</button>
+    </form>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat">
+    <div class="stat__icon i-green"><%- icon('money', 22) %></div>
+    <div><div class="stat__val"><%= h.money(total, currency) %></div><div class="stat__label">Collected in range</div></div>
+  </div>
+  <div class="stat">
+    <div class="stat__icon i-sky"><%- icon('reports', 22) %></div>
+    <div><div class="stat__val"><%= count.toLocaleString('en-IN') %></div><div class="stat__label">Receipts</div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card__head"><h3>Payment Mode Breakdown</h3></div>
+  <div class="card__body">
+    <%- include('../partials/bars', { items: modeDist.map(function(m){ return { label: labelFor(constants.PAYMENT_MODES, m.payment_mode), value: m.total, sub: h.money(m.total, currency) + ' · ' + m.count, color: '#0ea5e9' }; }) }) %>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card__head"><h3>Receipts (<%= receipts.length %>)</h3></div>
+  <div class="card__body tight">
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr><th>Receipt No</th><th>Date</th><th>Student</th><th class="text-right">Amount</th><th>Mode</th><th></th></tr>
+        </thead>
+        <tbody>
+          <% if (!receipts.length) { %>
+            <tr><td colspan="6"><div class="empty"><div class="big">🧾</div><h3>No receipts in this range</h3></div></td></tr>
+          <% } %>
+          <% let shown = 0; %>
+          <% receipts.forEach(function(r){ shown += Number(r.amount || 0); %>
+            <tr>
+              <td><a href="/receipts/<%= r.id %>"><strong><%= r.receipt_no %></strong></a></td>
+              <td class="muted"><%= h.formatDate(r.paid_on) %></td>
+              <td><%= r.student_name %><br><span class="muted small"><%= r.student_uid %></span></td>
+              <td class="text-right"><%= h.money(r.amount, currency) %></td>
+              <td><span class="badge gray"><%= labelFor(constants.PAYMENT_MODES, r.payment_mode) %></span></td>
+              <td><% if (r.cross_branch) { %><span class="badge blue">X-Branch</span><% } %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+        <% if (receipts.length) { %>
+        <tfoot>
+          <tr>
+            <td colspan="3" class="text-right"><strong>Total (<%= receipts.length %> receipt<%= receipts.length === 1 ? '' : 's' %>)</strong></td>
+            <td class="text-right"><strong><%= h.money(shown, currency) %></strong></td>
+            <td colspan="2"></td>
+          </tr>
+        </tfoot>
+        <% } %>
+      </table>
+    </div>
+  </div>
+</div>

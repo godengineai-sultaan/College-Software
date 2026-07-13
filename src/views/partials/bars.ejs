@@ -1,0 +1,19 @@
+<%
+  // Reusable horizontal bar list. Expects: items = [{label, value, sub, color}]
+  const _items = items || [];
+  const _max = (typeof max !== 'undefined' && max) ? max : Math.max(1, ..._items.map((i) => Number(i.value) || 0));
+%>
+<% if (!_items.length) { %>
+  <p class="muted small" style="margin:8px 0;">No data yet.</p>
+<% } %>
+<% _items.forEach(function (it) { %>
+  <div style="margin-bottom:11px;">
+    <div style="display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:5px;">
+      <span style="font-weight:500;"><%= it.label %></span>
+      <span class="muted"><%= it.sub || '' %></span>
+    </div>
+    <div class="progress">
+      <span style="width:<%= Math.round((Number(it.value) || 0) / _max * 100) %>%; <%= it.color ? ('background:' + it.color) : '' %>"></span>
+    </div>
+  </div>
+<% }); %>

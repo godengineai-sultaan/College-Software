@@ -1,0 +1,84 @@
+<div class="page-head">
+  <div>
+    <div class="breadcrumb"><a href="/examforms">Exam Forms</a> / <%= form.form_no %></div>
+    <h1 style="margin:0;"><%= form.form_no %></h1>
+    <div class="tag-list" style="margin-top:6px;">
+      <% var tc = form.exam_type==='regular'?'blue':(form.exam_type==='backlog'?'amber':'indigo'); %>
+      <span class="badge <%= tc %>"><%= labelFor(constants.EXAM_TYPES, form.exam_type) %></span>
+      <% var sc = form.status==='paid'?'green':(form.status==='approved'?'blue':(form.status==='rejected'?'red':(form.status==='submitted'?'amber':'gray'))); %>
+      <span class="badge <%= sc %>"><%= h.titleCase(form.status) %></span>
+      <span class="badge indigo">Branch <%= form.branch_code || '—' %></span>
+      <% if (form.paid) { %><span class="badge green">Fee Paid</span><% } %>
+    </div>
+  </div>
+  <div class="btn-group">
+    <% if (canManage('examforms')) { %>
+      <a href="/examforms/<%= form.id %>/edit" class="btn secondary"><%- icon('edit') %> Edit</a>
+    <% } %>
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card__head"><h3>Details</h3></div>
+    <div class="card__body">
+      <div class="detail-grid">
+        <div class="row"><span class="k">Student</span><span class="v"><a href="/students/<%= form.student_id %>"><%= form.student_name || '—' %></a> <span class="muted small"><%= form.student_uid || '' %></span></span></div>
+        <div class="row"><span class="k">Course</span><span class="v"><%= form.course_name || '—' %></span></div>
+        <div class="row"><span class="k">Exam Type</span><span class="v"><%= labelFor(constants.EXAM_TYPES, form.exam_type) %></span></div>
+        <div class="row"><span class="k">Session</span><span class="v"><%= form.session || '—' %></span></div>
+        <div class="row"><span class="k">Semester</span><span class="v"><%= form.semester || '—' %></span></div>
+        <div class="row"><span class="k">Fee Amount</span><span class="v"><%= h.money(form.fee_amount, currency) %></span></div>
+        <div class="row"><span class="k">Fee Paid</span><span class="v"><%= form.paid ? 'Yes' : 'No' %></span></div>
+        <div class="row"><span class="k">Submission Date</span><span class="v"><%= h.formatDate(form.submission_date) %></span></div>
+      </div>
+      <% if (form.subjects) { %>
+        <hr class="sep">
+        <div class="k muted small" style="text-transform:uppercase;letter-spacing:.03em;">Subjects</div>
+        <div style="margin-top:6px;white-space:pre-wrap;"><%= form.subjects %></div>
+      <% } %>
+    </div>
+  </div>
+
+  <div>
+    <div class="card">
+      <div class="card__head"><h3>Progress</h3></div>
+      <div class="card__body">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+          <span class="muted small"><%= h.titleCase(form.status) %></span>
+          <strong><%= form.progress || 0 %>%</strong>
+        </div>
+        <div class="progress"><span style="width:<%= form.progress || 0 %>%;"></span></div>
+      </div>
+    </div>
+
+    <% if (canManage('examforms')) { %>
+    <div class="card">
+      <div class="card__head"><h3>Advance Status</h3></div>
+      <div class="card__body">
+        <div class="btn-group">
+          <% statuses.forEach(function(s){ %>
+            <% if (s.value !== form.status) { %>
+              <form action="/examforms/<%= form.id %>/status" method="POST" style="margin:0;">
+                <%- csrfField() %>
+                <input type="hidden" name="status" value="<%= s.value %>">
+                <% var bc = s.value==='rejected'?'danger':((s.value==='paid'||s.value==='approved')?'success':'secondary'); %>
+                <button class="btn <%= bc %> sm"><%= s.label %></button>
+              </form>
+            <% } %>
+          <% }); %>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card__body">
+        <form action="/examforms/<%= form.id %>/delete" method="POST" data-confirm="Delete exam form <%= form.form_no %>? This cannot be undone." style="margin:0;">
+          <%- csrfField() %>
+          <button class="btn danger sm"><%- icon('trash',14) %> Delete Form</button>
+        </form>
+      </div>
+    </div>
+    <% } %>
+  </div>
+</div>

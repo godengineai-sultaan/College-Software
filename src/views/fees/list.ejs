@@ -1,0 +1,107 @@
+<%
+  // Build a querystring that preserves the current filters, overriding some keys.
+  const withParams = (extra) => {
+    const params = Object.assign({}, baseQuery || {}, extra || {});
+    const qs = Object.entries(params)
+      .filter(([, v]) => v !== undefined && v !== '' && v !== null)
+      .map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v)).join('&');
+    return '/fees' + (qs ? '?' + qs : '');
+  };
+%>
+<div class="page-head">
+  <div>
+    <h1>Fees &amp; Dues</h1>
+    <div class="sub"><%= defaultersCount.toLocaleString('en-IN') %> student<%= defaultersCount === 1 ? '' : 's' %> with outstanding dues<%= branchScopeId ? ' · Branch ' + currentUser.branch_code : '' %></div>
+  </div>
+  <div class="btn-group">
+    <a href="/students" class="btn secondary"><%- icon('students') %> All Students</a>
+    <% if (can('collection')) { %><a href="/collection" class="btn"><%- icon('money') %> Collect Fee</a><% } %>
+  </div>
+</div>
+
+<!-- Headline KPIs -->
+<div class="stats">
+  <div class="stat">
+    <div class="stat__icon i-red"><%- icon('money',22) %></div>
+    <div><div class="stat__val"><%= h.money(outstanding, currency) %></div><div class="stat__label">Total Outstanding</div></div>
+  </div>
+  <div class="stat">
+    <div class="stat__icon i-indigo"><%- icon('students',22) %></div>
+    <div><div class="stat__val"><%= studentCount.toLocaleString('en-IN') %></div><div class="stat__label">Students<%= branchScopeId ? '' : ' (all branches)' %></div></div>
+  </div>
+  <div class="stat">
+    <div class="stat__icon i-amber"><%- icon('clock',22) %></div>
+    <div><div class="stat__val"><%= defaultersCount.toLocaleString('en-IN') %></div><div class="stat__label">Defaulters</div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card__head">
+    <h3>Defaulters</h3>
+  </div>
+  <div class="card__body" style="padding-bottom:6px;">
+    <form class="toolbar" method="GET" action="/fees">
+      <div class="search-box">
+        <span class="ic"><%- icon('search', 16) %></span>
+        <input type="text" name="q" value="<%= query.q || '' %>" placeholder="Search name, ID, phone, course...">
+      </div>
+      <% if (!branchScopeId && branches.length > 1) { %>
+        <select name="branch" onchange="this.form.submit()">
+          <option value="">All Branches</option>
+          <% branches.forEach(function(b){ %><option value="<%= b.id %>" <%= String(query.branch)==String(b.id)?'selected':'' %>>Branch <%= b.branch_code %> — <%= b.name %></option><% }); %>
+        </select>
+      <% } %>
+      <% if (showAll) { %><input type="hidden" name="all" value="1"><% } %>
+      <button class="btn secondary sm">Filter</button>
+      <% if (query.q || query.branch) { %><a href="/fees<%= showAll ? '?all=1' : '' %>" class="btn ghost sm">Clear</a><% } %>
+    </form>
+  </div>
+  <div class="card__body tight">
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr>
+            <th>Student ID</th><th>Name</th><th>Course / Sem</th>
+            <% if (!branchScopeId) { %><th>Branch</th><% } %>
+            <th>Phone</th><th class="text-right">Due</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (!rows.length) { %>
+            <tr><td colspan="<%= branchScopeId ? 6 : 7 %>"><div class="empty"><div class="big">🎉</div><h3>No dues here</h3><p><%= query.q ? 'No defaulters match your search.' : 'Every student in scope is fully paid up.' %></p></div></td></tr>
+          <% } %>
+          <% rows.forEach(function(s){ %>
+            <tr>
+              <td><a href="/students/<%= s.id %>"><strong><%= s.unique_id %></strong></a></td>
+              <td><%= s.name %></td>
+              <td><%= s.course_name || '—' %> · Sem <%= s.semester %></td>
+              <% if (!branchScopeId) { %><td><span class="badge indigo"><%= s.branch_code || '—' %></span></td><% } %>
+              <td class="muted"><%= s.phone || '—' %></td>
+              <td class="text-right"><strong style="color: var(--danger);"><%= h.money(s.due, currency) %></strong></td>
+              <td class="nowrap">
+                <a class="icon-btn" href="/students/<%= s.id %>" title="View profile"><%- icon('eye', 15) %></a>
+                <% if (can('collection')) { %>
+                  <a class="btn sm" href="/collection?student=<%= s.id %>"><%- icon('money',14) %> Collect</a>
+                <% } %>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <% if (rows.length) { %>
+      <div class="pagination" style="justify-content: space-between;">
+        <span class="muted small" style="border:none; background:none; padding-left:0;">
+          Showing <%= rows.length.toLocaleString('en-IN') %> of <%= matched.toLocaleString('en-IN') %> defaulter<%= matched === 1 ? '' : 's' %>, highest dues first<%= capped ? ' (list capped at ' + rows.length + '+).' : '.' %>
+        </span>
+        <span style="border:none; background:none;">
+          <% if (!showAll && matched > shownLimit) { %>
+            <a href="<%= withParams({ all: '1' }) %>">Show all <%= matched.toLocaleString('en-IN') %></a>
+          <% } else if (showAll && matched > shownLimit) { %>
+            <a href="<%= withParams({ all: undefined }) %>">Show top <%= shownLimit %></a>
+          <% } %>
+        </span>
+      </div>
+    <% } %>
+  </div>
+</div>

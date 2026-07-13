@@ -1,0 +1,74 @@
+<div class="page-head">
+  <div>
+    <h1>Exam Forms</h1>
+    <div class="sub"><%= total.toLocaleString('en-IN') %> form<%= total === 1 ? '' : 's' %><%= branchScopeId ? ' · Branch ' + currentUser.branch_code : '' %></div>
+  </div>
+  <div class="btn-group">
+    <% if (canManage('examforms')) { %>
+      <a href="/examforms/new" class="btn"><%- icon('plus') %> New Exam Form</a>
+    <% } %>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card__body" style="padding-bottom:6px;">
+    <form class="toolbar" method="GET" action="/examforms">
+      <div class="search-box">
+        <span class="ic"><%- icon('search', 16) %></span>
+        <input type="text" name="q" value="<%= query.q || '' %>" placeholder="Search form no, student...">
+      </div>
+      <% if (!branchScopeId && branches.length > 1) { %>
+        <select name="branch" onchange="this.form.submit()">
+          <option value="">All Branches</option>
+          <% branches.forEach(function(b){ %><option value="<%= b.id %>" <%= String(query.branch)==String(b.id)?'selected':'' %>>Branch <%= b.branch_code %> — <%= b.name %></option><% }); %>
+        </select>
+      <% } %>
+      <select name="exam_type" onchange="this.form.submit()">
+        <option value="">All Types</option>
+        <% examTypes.forEach(function(t){ %><option value="<%= t.value %>" <%= query.exam_type===t.value?'selected':'' %>><%= t.label %></option><% }); %>
+      </select>
+      <select name="status" onchange="this.form.submit()">
+        <option value="">Any Status</option>
+        <% statuses.forEach(function(s){ %><option value="<%= s.value %>" <%= query.status===s.value?'selected':'' %>><%= s.label %></option><% }); %>
+      </select>
+      <button class="btn secondary sm">Filter</button>
+      <% if (query.q || query.exam_type || query.status || query.branch) { %><a href="/examforms" class="btn ghost sm">Clear</a><% } %>
+    </form>
+  </div>
+  <div class="card__body tight">
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr><th>Form No</th><th>Student</th><th>Exam Type</th><th>Session</th><th>Sem</th><th class="text-right">Fee</th><th>Status</th><th>Progress</th><th></th></tr>
+        </thead>
+        <tbody>
+          <% if (!forms.length) { %>
+            <tr><td colspan="9"><div class="empty"><div class="big">📝</div><h3>No exam forms found</h3><p>Try adjusting filters or create a new exam form.</p></div></td></tr>
+          <% } %>
+          <% forms.forEach(function(f){ %>
+            <tr>
+              <td><a href="/examforms/<%= f.id %>"><strong><%= f.form_no %></strong></a></td>
+              <td><%= f.student_name || '—' %><% if (f.student_uid) { %><br><span class="muted small"><%= f.student_uid %></span><% } %></td>
+              <td><% var tc = f.exam_type==='regular'?'blue':(f.exam_type==='backlog'?'amber':'indigo'); %><span class="badge <%= tc %>"><%= labelFor(constants.EXAM_TYPES, f.exam_type) %></span></td>
+              <td><%= f.session || '—' %></td>
+              <td><%= f.semester || '—' %></td>
+              <td class="text-right"><%= h.money(f.fee_amount, currency) %></td>
+              <td>
+                <% var sc = f.status==='paid'?'green':(f.status==='approved'?'blue':(f.status==='rejected'?'red':(f.status==='submitted'?'amber':'gray'))); %>
+                <span class="badge <%= sc %>"><%= h.titleCase(f.status) %></span>
+              </td>
+              <td style="min-width:120px;"><div class="progress"><span style="width:<%= f.progress || 0 %>%;"></span></div></td>
+              <td class="nowrap">
+                <a class="icon-btn" href="/examforms/<%= f.id %>" title="View"><%- icon('eye', 15) %></a>
+                <% if (canManage('examforms')) { %>
+                  <a class="icon-btn" href="/examforms/<%= f.id %>/edit" title="Edit"><%- icon('edit', 15) %></a>
+                <% } %>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <%- include('../partials/pagination', { page: page, pages: pages, baseQuery: baseQuery }) %>
+  </div>
+</div>

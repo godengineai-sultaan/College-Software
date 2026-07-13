@@ -1,0 +1,95 @@
+<%
+  // Badge colour maps.
+  const channelClass = { sms: 'blue', email: 'indigo', dashboard: 'gray' };
+  const statusClass  = { sent: 'green', queued: 'amber', failed: 'red', read: 'gray' };
+  const truncate = (s, n) => { s = String(s || ''); return s.length > n ? s.slice(0, n) + '…' : s; };
+%>
+<div class="page-head">
+  <div>
+    <h1>Notifications</h1>
+    <div class="sub"><%= total.toLocaleString('en-IN') %> message<%= total === 1 ? '' : 's' %><%= branchScopeId ? ' · Branch ' + currentUser.branch_code : '' %></div>
+  </div>
+  <div class="btn-group">
+    <% if (canManage('notifications')) { %>
+      <form action="/notifications/remind" method="POST" style="display:inline;" data-confirm="Queue fee-due reminders to all students with pending dues?">
+        <%- csrfField() %>
+        <button class="btn secondary"><%- icon('bell') %> Send Fee Reminders</button>
+      </form>
+      <a href="/notifications/compose" class="btn"><%- icon('plus') %> Compose</a>
+    <% } %>
+  </div>
+</div>
+
+<!-- Gateway status note -->
+<div class="alert <%= (smsEnabled || emailEnabled) ? 'info' : 'warning' %>">
+  <span><%- icon('bell', 16) %></span>
+  <div>
+    SMS is <strong><%= smsEnabled ? 'enabled' : 'disabled' %></strong> and Email is <strong><%= emailEnabled ? 'enabled' : 'disabled' %></strong>.
+    <% if (!smsEnabled || !emailEnabled) { %>
+      Messages on a disabled channel are queued until a gateway is configured in <a href="/settings">Settings</a>.
+    <% } else { %>
+      Configure gateways in <a href="/settings">Settings</a>.
+    <% } %>
+  </div>
+</div>
+
+<!-- KPI tiles -->
+<div class="stats">
+  <div class="stat">
+    <div class="stat__icon i-green"><%- icon('check', 22) %></div>
+    <div><div class="stat__val"><%= kpi.sent.toLocaleString('en-IN') %></div><div class="stat__label">Sent</div></div>
+  </div>
+  <div class="stat">
+    <div class="stat__icon i-amber"><%- icon('clock', 22) %></div>
+    <div><div class="stat__val"><%= kpi.queued.toLocaleString('en-IN') %></div><div class="stat__label">Queued</div></div>
+  </div>
+  <div class="stat">
+    <div class="stat__icon i-red"><%- icon('bell', 22) %></div>
+    <div><div class="stat__val"><%= kpi.failed.toLocaleString('en-IN') %></div><div class="stat__label">Failed</div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card__body" style="padding-bottom:6px;">
+    <form class="toolbar" method="GET" action="/notifications">
+      <select name="channel" onchange="this.form.submit()">
+        <option value="">All Channels</option>
+        <% channels.forEach(function(c){ %><option value="<%= c %>" <%= query.channel===c?'selected':'' %>><%= h.titleCase(c) %></option><% }); %>
+      </select>
+      <select name="status" onchange="this.form.submit()">
+        <option value="">Any Status</option>
+        <% statuses.forEach(function(s){ %><option value="<%= s %>" <%= query.status===s?'selected':'' %>><%= h.titleCase(s) %></option><% }); %>
+      </select>
+      <button class="btn secondary sm">Filter</button>
+      <% if (query.channel || query.status) { %><a href="/notifications" class="btn ghost sm">Clear</a><% } %>
+    </form>
+  </div>
+  <div class="card__body tight">
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr><th>Sent / Created</th><th>Channel</th><th>Recipient</th><th>Subject</th><th>Message</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <% if (!notifications.length) { %>
+            <tr><td colspan="6"><div class="empty"><div class="big">🔔</div><h3>No notifications found</h3><p>Compose a message or send fee reminders to get started.</p></div></td></tr>
+          <% } %>
+          <% notifications.forEach(function(n){ %>
+            <tr>
+              <td class="muted"><%= h.formatDateTime(n.created_at) %></td>
+              <td><span class="badge <%= channelClass[n.channel] || 'gray' %>"><%= h.titleCase(n.channel) %></span></td>
+              <td>
+                <%= n.recipient || '—' %>
+                <% if (n.recipient_name) { %><br><span class="muted small"><%= n.recipient_name %></span><% } %>
+              </td>
+              <td><%= n.subject || '—' %></td>
+              <td class="wrap"><%= truncate(n.message, 70) %></td>
+              <td><span class="badge <%= statusClass[n.status] || 'gray' %>"><%= h.titleCase(n.status) %></span></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <%- include('../partials/pagination', { page: page, pages: pages, baseQuery: baseQuery }) %>
+  </div>
+</div>

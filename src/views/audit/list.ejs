@@ -1,0 +1,80 @@
+<%
+  // Safe JSON parse — old_value/new_value are stored as JSON strings (or null).
+  function parseJSON(s) { try { return s ? JSON.parse(s) : null; } catch (e) { return null; } }
+  // Compact "key: value" summary of an object for the details cell.
+  function summarize(obj) {
+    if (obj === null || obj === undefined) return '';
+    if (typeof obj !== 'object') return String(obj);
+    return Object.keys(obj).map(function (k) {
+      var v = obj[k];
+      if (v && typeof v === 'object') v = JSON.stringify(v);
+      return k + ': ' + (v === null || v === undefined ? '—' : String(v));
+    }).join(', ');
+  }
+  // Action -> badge colour.
+  function actionClass(a) {
+    if (a === 'INSERT' || a === 'BULK_INSERT') return 'green';
+    if (a === 'UPDATE') return 'blue';
+    if (a === 'DELETE' || a === 'CANCEL') return 'red';
+    if (a === 'LOGIN' || a === 'LOGOUT') return 'gray';
+    return 'indigo';
+  }
+%>
+<div class="page-head">
+  <div>
+    <h1>Audit Logs</h1>
+    <div class="sub"><%= total.toLocaleString('en-IN') %> entr<%= total === 1 ? 'y' : 'ies' %> · who did what, when and from where</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card__body" style="padding-bottom:6px;">
+    <form class="toolbar" method="GET" action="/audit">
+      <select name="action" onchange="this.form.submit()">
+        <option value="">All Actions</option>
+        <% actions.forEach(function(a){ %><option value="<%= a %>" <%= query.action===a?'selected':'' %>><%= a %></option><% }); %>
+      </select>
+      <input type="text" name="table" value="<%= query.table || '' %>" placeholder="Table name (e.g. students)">
+      <button class="btn secondary sm">Filter</button>
+      <% if (query.action || query.table || query.user) { %><a href="/audit" class="btn ghost sm">Clear</a><% } %>
+    </form>
+  </div>
+  <div class="card__body tight">
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr><th>When</th><th>User</th><th>Action</th><th>Table</th><th>Record</th><th>IP</th><th>Details</th></tr>
+        </thead>
+        <tbody>
+          <% if (!logs.length) { %>
+            <tr><td colspan="7"><div class="empty"><div class="big">📋</div><h3>No audit entries found</h3><p>Try adjusting the filters above.</p></div></td></tr>
+          <% } %>
+          <% logs.forEach(function(l){ %>
+            <% var oldVal = parseJSON(l.old_value); var newVal = parseJSON(l.new_value); %>
+            <tr>
+              <td class="muted"><%= h.formatDateTime(l.created_at) %></td>
+              <td><%= l.username || 'system' %></td>
+              <td><span class="badge <%= actionClass(l.action) %>"><%= l.action %></span></td>
+              <td><%= l.table_name || '—' %></td>
+              <td class="muted"><%= l.record_id || '—' %></td>
+              <td class="muted"><%= l.ip_address || '—' %></td>
+              <td class="wrap">
+                <% if (oldVal || newVal) { %>
+                  <% if (oldVal) { %>
+                    <div class="small muted">old: <code><%= summarize(oldVal) %></code></div>
+                  <% } %>
+                  <% if (newVal) { %>
+                    <div class="small">new: <code><%= summarize(newVal) %></code></div>
+                  <% } %>
+                <% } else { %>
+                  <span class="muted">—</span>
+                <% } %>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <%- include('../partials/pagination', { page: page, pages: pages, baseQuery: baseQuery }) %>
+  </div>
+</div>
